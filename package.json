@@ -1,15 +1,16 @@
 {
   "name": "packgames-studio",
   "version": "1.0.0",
-  "description": "PackGames studio backend functions for GitHub and Netlify API",
+  "description": "PackGames studio backend functions for GitHub and Supabase",
   "dependencies": {
     "@octokit/rest": "^20.0.2",
+    "@supabase/supabase-js": "^2.39.0",
     "node-fetch": "^2.6.9"
   },
   "scripts": {
     "dev": "netlify functions:serve"
   },
-  "keywords": ["netlify", "functions", "github", "api"],
+  "keywords": ["netlify", "functions", "github", "supabase", "api"],
   "author": "Your Name",
   "license": "MIT"
 }
