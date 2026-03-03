@@ -1,5 +1,5 @@
-// PackAi – Core AI Engine with Advanced Fuzzy Matching
-// Supports multiple dialogue files and human-like responses
+// PackAi – Core AI Engine with Advanced Fuzzy Matching and .PAI Support
+// Preserves all original functionality and adds parsing for custom .PAI files.
 
 (function() {
     // ---------- Configuration ----------
@@ -15,25 +15,29 @@
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
 
+    // ---------- Text Normalization ----------
     function normalize(text) {
-    // Remove common punctuation, keep all letters (including non-Latin)
-    return text.toLowerCase()
-        .replace(/[.,!?;:'"()\[\]{}<>\/\\|–—―-]/g, ' ')  // punctuation → space
-        .replace(/\s+/g, ' ')                             // collapse spaces
-        .trim();
-}
+        return text.toLowerCase()
+            .replace(/[.,!?;:'"()\[\]{}<>\/\\|–—―-]/g, ' ')  // punctuation → space
+            .replace(/\s+/g, ' ')                             // collapse spaces
+            .trim();
+    }
 
-    // Simple stopwords list (common words that don't add meaning)
-    const stopwords = new Set(['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
-        'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its',
-        'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that',
-        'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having',
-        'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while',
-        'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before',
-        'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again',
-        'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each',
-        'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than',
-        'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now']);
+    // Full stopwords list (common words that don't add meaning)
+    const stopwords = new Set([
+        'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
+        'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
+        'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which',
+        'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be',
+        'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an',
+        'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for',
+        'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after',
+        'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under',
+        'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all',
+        'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not',
+        'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don',
+        'should', 'now'
+    ]);
 
     // Levenshtein distance for fuzzy matching
     function levenshtein(a, b) {
@@ -96,63 +100,40 @@
         });
     }
 
-    // ---------- API Key Handling ----------
-    const API_KEY_STORAGE_KEY = 'packai_api_key';
-
-    async function getOrCreateAPIKey() {
-        let apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-        if (apiKey) {
-            console.log('API key found in localStorage');
-            return apiKey;
-        }
-
-        console.log('No API key found. Generating from dialogue files...');
-        try {
-            const fileList = Array.isArray(DIALOGUE_FILES) ? DIALOGUE_FILES : [DIALOGUE_FILES];
-            const fetchPromises = fileList.map(async (file) => {
-                const response = await fetch(file);
-                if (!response.ok) throw new Error(`Failed to load ${file}`);
-                return await response.text();
-            });
-            const texts = await Promise.all(fetchPromises);
-            const combinedText = texts.join('\n');
-            const base64 = btoa(unescape(encodeURIComponent(combinedText)));
-            localStorage.setItem(API_KEY_STORAGE_KEY, base64);
-            return base64;
-        } catch (error) {
-            console.error('Could not generate API key:', error);
-            return '';
-        }
-    }
-
-    function decodeAPIKey(apiKey) {
-        if (!apiKey) return '';
-        try {
-            const decoded = decodeURIComponent(escape(atob(apiKey)));
-            return decoded;
-        } catch (e) {
-            console.error('Failed to decode API key', e);
-            return '';
-        }
-    }
-
-    // Parse Q&A pairs and precompute normalized keywords
-    function parseQnA(text) {
-        return text.split('\n')
+    // ---------- Parsers ----------
+    // Standard .txt format: question::answer
+    function parseTxt(content) {
+        return content.split('\n')
             .filter(line => line.includes('::'))
             .map(line => {
                 const [q, a] = line.split('::').map(s => s.trim());
                 const normalized = normalize(q);
                 const keywords = extractKeywords(normalized);
-                return { 
-                    question: q, 
-                    answer: a, 
-                    normalized,
-                    keywords
-                };
+                return { question: q, answer: a, normalized, keywords };
             });
     }
 
+    // Custom .PAI format: User)Response $question$ @PAI) response @answer
+    function parsePAI(content) {
+        const lines = content.split('\n');
+        const pairs = [];
+        const regex = /^User\)Response \$([^$]+)\$ @PAI\) response @(.*)$/;
+        for (let line of lines) {
+            line = line.trim();
+            if (!line) continue;
+            const match = line.match(regex);
+            if (match) {
+                const question = match[1].trim();
+                const answer = match[2].trim();
+                const normalized = normalize(question);
+                const keywords = extractKeywords(normalized);
+                pairs.push({ question, answer, normalized, keywords });
+            }
+        }
+        return pairs;
+    }
+
+    // Merge two knowledge arrays (base + learned)
     function mergeKnowledge(base, learned) {
         const learnedPairs = learned.map(l => ({ 
             question: l.question, 
@@ -322,6 +303,54 @@
         }
     }
 
+    // ---------- API Key Handling (stores all files as a JSON object) ----------
+    const API_KEY_STORAGE_KEY = 'packai_api_key';
+
+    async function getOrCreateAPIKey() {
+        let apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+        if (apiKey) {
+            console.log('API key found in localStorage');
+            return apiKey;
+        }
+
+        console.log('No API key found. Generating from dialogue files...');
+        try {
+            const fileList = Array.isArray(DIALOGUE_FILES) ? DIALOGUE_FILES : [DIALOGUE_FILES];
+            const fileContents = {};
+
+            // Fetch each file and store its content keyed by filename
+            for (const file of fileList) {
+                const response = await fetch(file);
+                if (!response.ok) {
+                    console.warn(`Failed to load ${file}, skipping`);
+                    continue;
+                }
+                const text = await response.text();
+                fileContents[file] = text;
+            }
+
+            // Store as JSON string, then base64
+            const combinedJson = JSON.stringify(fileContents);
+            const base64 = btoa(unescape(encodeURIComponent(combinedJson)));
+            localStorage.setItem(API_KEY_STORAGE_KEY, base64);
+            return base64;
+        } catch (error) {
+            console.error('Could not generate API key:', error);
+            return '';
+        }
+    }
+
+    function decodeAPIKey(apiKey) {
+        if (!apiKey) return {};
+        try {
+            const jsonStr = decodeURIComponent(escape(atob(apiKey)));
+            return JSON.parse(jsonStr);
+        } catch (e) {
+            console.error('Failed to decode API key', e);
+            return {};
+        }
+    }
+
     // ---------- Initialization ----------
     async function init() {
         try {
@@ -332,9 +361,24 @@
         }
 
         const apiKey = await getOrCreateAPIKey();
-        const knowledgeText = decodeAPIKey(apiKey);
-        const baseKnowledge = parseQnA(knowledgeText);
-        console.log(`Loaded ${baseKnowledge.length} base Q&A pairs from API key`);
+        const fileContents = decodeAPIKey(apiKey); // object: { filename: content, ... }
+
+        // Parse each file based on its extension
+        let baseKnowledge = [];
+        for (const [filename, content] of Object.entries(fileContents)) {
+            if (filename.toLowerCase().endsWith('.pai')) {
+                const pairs = parsePAI(content);
+                console.log(`Loaded ${pairs.length} pairs from ${filename} (PAI)`);
+                baseKnowledge = baseKnowledge.concat(pairs);
+            } else {
+                // assume .txt or any other extension uses :: format
+                const pairs = parseTxt(content);
+                console.log(`Loaded ${pairs.length} pairs from ${filename} (TXT)`);
+                baseKnowledge = baseKnowledge.concat(pairs);
+            }
+        }
+
+        console.log(`Total base knowledge: ${baseKnowledge.length} pairs`);
 
         const learned = await loadLearnedPairs();
         console.log(`Loaded ${learned.length} learned pairs from IndexedDB`);
@@ -342,13 +386,9 @@
         knowledgeBase = mergeKnowledge(baseKnowledge, learned);
         console.log(`Total knowledge: ${knowledgeBase.length} entries`);
 
-        sendButton.addEventListener('click', () => {
-            handleUserMessage(userInput.value);
-        });
+        sendButton.addEventListener('click', () => handleUserMessage(userInput.value));
         userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleUserMessage(userInput.value);
-            }
+            if (e.key === 'Enter') handleUserMessage(userInput.value);
         });
     }
 
