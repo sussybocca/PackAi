@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PackAi Knowledge Editor</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0b0f17;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: #151e2f;
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid #2a3650;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+        h1 {
+            color: #a5f3fc;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: #1e2b45;
+            border: 1px solid #2a3a5a;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 300px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+        .format-hint {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+        button {
+            background: #2563eb;
+            border: none;
+            border-radius: 40px;
+            padding: 16px 32px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border: 1px solid #3b82f6;
+            width: 100%;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #1d4ed8;
+            transform: scale(1.02);
+        }
+        #status {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 12px;
+            display: none;
+            font-weight: 500;
+        }
+        .success {
+            background: #065f46;
+            color: #d1fae5;
+            display: block !important;
+        }
+        .error {
+            background: #991b1b;
+            color: #fee2e2;
+            display: block !important;
+        }
+        .example {
+            background: #0f172a;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid #3b82f6;
+            margin-top: 24px;
+        }
+        .example h3 {
+            margin-top: 0;
+            color: #a5f3fc;
+        }
+        code {
+            background: #1e293b;
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: #facc15;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 PackAi Knowledge Uploader</h1>
+        <p>Create a new knowledge file (.txt or .PAI) and push it to the repository.</p>
+
+        <div class="form-group">
+            <label for="fileType">File Type:</label>
+            <select id="fileType">
+                <option value="txt">.txt (Q&A format: question::answer)</option>
+                <option value="pai">.PAI (custom syntax)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="filename">Filename (without extension):</label>
+            <input type="text" id="filename" placeholder="e.g., my-knowledge" />
+        </div>
+
+        <div class="form-group">
+            <label for="content">File Content:</label>
+            <textarea id="content" placeholder="Enter your knowledge here..."></textarea>
+            <div class="format-hint" id="formatHint"></div>
+        </div>
+
+        <button id="submitBtn">🚀 Push to GitHub</button>
+
+        <div id="status"></div>
+
+        <div class="example" id="exampleBox">
+            <h3>📘 Example Format</h3>
+            <div id="exampleContent">
+                <code>.txt format:</code><br>
+                hello::Hello there!<br>
+                how are you::I'm fine, thanks!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileTypeSelect = document.getElementById('fileType');
+        const filenameInput = document.getElementById('filename');
+        const contentTextarea = document.getElementById('content');
+        const formatHint = document.getElementById('formatHint');
+        const exampleContent = document.getElementById('exampleContent');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('status');
+
+        function updateFormatHint() {
+            const type = fileTypeSelect.value;
+            if (type === 'txt') {
+                formatHint.innerText = 'Each line: question::answer';
+                exampleContent.innerHTML = `<code>.txt format:</code><br>hello::Hello there!<br>how are you::I'm fine, thanks!`;
+            } else {
+                formatHint.innerText = 'Each line: User)Response $question$ @PAI) response @answer';
+                exampleContent.innerHTML = `<code>.PAI format:</code><br>User)Response $what's up?$ @PAI) response @Not much, just chillin'. You?<br>User)Response $tell me a joke$ @PAI) response @Why don't scientists trust atoms? Because they make up everything!`;
+            }
+        }
+
+        fileTypeSelect.addEventListener('change', updateFormatHint);
+        updateFormatHint();
+
+        submitBtn.addEventListener('click', async () => {
+            const type = fileTypeSelect.value;
+            const baseFilename = filenameInput.value.trim();
+            const content = contentTextarea.value.trim();
+
+            if (!baseFilename) {
+                showStatus('Please enter a filename.', 'error');
+                return;
+            }
+            if (!content) {
+                showStatus('Please enter file content.', 'error');
+                return;
+            }
+
+            const fullFilename = `${baseFilename}.${type === 'pai' ? 'pai' : 'txt'}`;
+
+            // Validate content format roughly (optional)
+            if (type === 'txt') {
+                const lines = content.split('\n');
+                const hasInvalid = lines.some(line => line.trim() && !line.includes('::'));
+                if (hasInvalid) {
+                    if (!confirm('Some lines do not contain "::". They will be ignored. Continue?')) {
+                        return;
+                    }
+                }
+            } else {
+                const lines = content.split('\n');
+                const regex = /^User\)Response \$([^$]+)\$ @PAI\) response @(.*)$/;
+                const invalidLines = lines.filter(line => line.trim() && !regex.test(line));
+                if (invalidLines.length > 0) {
+                    if (!confirm('Some lines do not match the .PAI format. They will be ignored. Continue?')) {
+                        return;
+                    }
+                }
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Pushing...';
+
+            try {
+                const response = await fetch('/.netlify/functions/push-to-github', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: fullFilename,
+                        content: content,
+                    }),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    showStatus('✅ File pushed successfully! It will be included after the next site build.', 'success');
+                    filenameInput.value = '';
+                    contentTextarea.value = '';
+                } else {
+                    showStatus(`❌ Error: ${result.error || 'Unknown error'}`, 'error');
+                }
+            } catch (err) {
+                showStatus(`❌ Network error: ${err.message}`, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = '🚀 Push to GitHub';
+            }
+        });
+
+        function showStatus(msg, type) {
+            statusDiv.className = type;
+            statusDiv.innerText = msg;
+        }
+    </script>
+</body>
+</html>
