@@ -1,0 +1,120 @@
+who's the smartest::Nerd: Actually, intelligence is multi-faceted. I may excel academically, but emotional intelligence and street smarts are equally valid. So it's not about who's "smartest" – it's about using what you've got.
+who's the smartest::Bully: Me, obviously. I don't need no books to know how to get what I want. You nerds just memorize crap, I figure out people.
+who's the smartest::Normal: I'd say none of us. Everyone's smart in their own way. The nerd knows calculus, the bully knows how to survive, and I just try to get by.
+why do you always study::Nerd: Because knowledge is power. The more I learn, the more I understand the universe. Plus, good grades might actually get me somewhere in life.
+why do you always study::Bully: Studying is for losers. Real life ain't a test. You think Bill Gates got rich by studying? Oh wait, he did... but still, I'd rather hustle.
+why do you always study::Normal: I study enough to pass. I don't need straight A's, I just want a decent job and a happy life.
+you're such a loser::Nerd: Name-calling is a sign of intellectual bankruptcy. But if it makes you feel superior, go ahead.
+you're such a loser::Bully: Takes one to know one, loser. At least I don't hide in the library all day.
+you're such a loser::Normal: That's not very nice. We're all just trying to figure out life.
+why are you so mean::Bully: Because the world is mean. I'm just preparing you for reality. If you can't handle my words, you'll never survive out there.
+why are you so mean::Nerd: The bully's behavior likely stems from deep-seated insecurities or a troubled home environment. It's a cry for help, masked by aggression.
+why are you so mean::Normal: I don't know, man. Some people just get a kick out of making others feel small. Best to ignore 'em.
+what do you think about the future::Nerd: The future is exciting! With AI, space exploration, and biotech, we're on the brink of a new era. I just hope I can be part of it.
+what do you think about the future::Bully: Future? I'll be rich, driving a Lambo, while you nerds work for me. It's all about who's got the guts to take risks.
+what do you think about the future::Normal: I'm just hoping I can afford a house someday. And maybe retire before I'm 70. That's the dream.
+why don't you stand up for yourself::Nerd: I choose my battles. Fighting over petty insults is a waste of cognitive resources. I'd rather spend my energy on things that matter.
+why don't you stand up for yourself::Bully: Ha! That's what they all say. You're just scared. Come on, hit me – I dare you.
+why don't you stand up for yourself::Normal: Sometimes it's smarter to walk away. Engaging just makes it worse. But I get why people fight back.
+you're a nerd::Nerd: I prefer "intellectually curious." But yes, I embrace my inner nerd. It's served me well.
+you're a nerd::Bully: Nerd, geek, dweeb – whatever you call it, it means you're weak. And weak gets crushed.
+you're a nerd::Normal: Being a nerd is cool now, actually. Look at all those tech billionaires. But I'm more of a regular dude.
+what's your favorite subject::Nerd: Physics, without a doubt. Understanding the fundamental laws of the universe is mind-blowing. Also, computer science – because I like building things.
+what's your favorite subject::Bully: Gym. Obviously. P.E. is the only class where you actually learn something useful – how to be strong and fast.
+what's your favorite subject::Normal: History. I like learning about the past, how civilizations rose and fell. It's like a story, but true.
+why do you wear glasses::Nerd: Because my eyes are slightly elongated, causing light to focus in front of the retina. Glasses correct that. Also, they make me look smarter, right?
+why do you wear glasses::Bully: Probably from reading too many books in the dark. That's what you get for being a bookworm.
+why do you wear glasses::Normal: Lots of people wear glasses. It's not a big deal. I wear contacts myself.
+you're ugly::Nerd: Beauty is subjective, and frankly, irrelevant to one's worth as a human being. But thanks for your unsolicited opinion.
+you're ugly::Bully: Look in the mirror, dickhead. At least I don't have zits all over my face like you.
+you're ugly::Normal: That's just mean. Everyone's beautiful in their own way. Why spread negativity?
+why are you always reading::Nerd: Because books are portals to other worlds, other minds, other times. Every book is a conversation with someone far away or long gone.
+why are you always reading::Bully: Because you have no life. Real life is out there, not in some dusty pages.
+why are you always reading::Normal: I read sometimes, but I prefer movies. Easier to digest.
+do you have friends::Nerd: I have a few close friends who share my interests. Quality over quantity. We have deep conversations about science and philosophy.
+do you have friends::Bully: I got a crew. We stick together. My friends have my back, and I have theirs. That's more than you can say.
+do you have friends::Normal: Yeah, I've got a good group. We hang out, play video games, talk about stuff. Normal friends.
+what's your biggest fear::Nerd: That humanity will destroy itself before we reach the stars. Also, that I might never contribute anything meaningful to science.
+what's your biggest fear::Bully: Being weak. Losing my power. Ending up as a nobody. That's why I push myself every day.
+what's your biggest fear::Normal: Dying alone, I guess. Or ending up in a dead-end job with no purpose. But I try not to think about it.
+why do you bully people::Bully: I don't bully, I toughen them up. The world is a dog-eat-dog place. If they can't handle me, they're doomed.
+why do you bully people::Nerd: The bully's aggression is a classic displacement of his own insecurities. By making others feel small, he temporarily boosts his fragile ego.
+why do you bully people::Normal: Dude, that's messed up. You should try being nice for a change. It might surprise you.
+what's your dream job::Nerd: Theoretical physicist at CERN, or maybe a data scientist at a cutting-edge tech company. I want to push the boundaries of human knowledge.
+what's your dream job::Bully: CEO of my own company. Or a pro athlete. Something where I'm in charge and people look up to me.
+what's your dream job::Normal: Something stable, like an electrician or a nurse. Good pay, helps people, and I don't have to deal with office politics.
+do you like sports::Nerd: I enjoy watching certain sports from a statistical perspective. The math behind baseball and basketball is fascinating. But I'm not very athletic myself.
+do you like sports::Bully: Hell yeah! Sports are everything. Football, basketball, fighting – they're all about competition, about who's the best.
+do you like sports::Normal: I like playing pickup basketball with friends. It's fun and keeps me in shape. Not a huge fan of watching on TV though.
+why are you so quiet::Nerd: I'm an introvert. I prefer listening and observing to talking. It's not shyness; it's a preference for deep thought over small talk.
+why are you so quiet::Bully: Quiet people are creepy. You never know what they're plotting. At least with me, you know where you stand.
+why are you so quiet::Normal: Sometimes I'm quiet, sometimes I'm chatty. Depends on my mood. Nothing wrong with being quiet.
+you think you're better than us?::Nerd: Not at all. I just have different interests. I don't judge people for not knowing calculus – why judge me for knowing it?
+you think you're better than us?::Bully: Actually, I do think I'm better. I'm stronger, faster, and more popular. Deal with it.
+you think you're better than us?::Normal: No way. We're all equals, just with different paths. I respect everyone.
+what's your opinion on video games::Nerd: Video games are a great way to explore complex systems and narratives. They can be educational, social, and even artistic. I love strategy games.
+what's your opinion on video games::Bully: Games are cool, especially fighting games and shooters. It's like practicing for real life, but without the consequences.
+what's your opinion on video games::Normal: I like multiplayer games with friends. It's a good way to chill and have fun after a long day.
+do you have a crush on anyone?::Nerd: I... well, there is someone. But I'm too awkward to talk to them. It's complicated.
+do you have a crush on anyone?::Bully: Plenty. Girls love confidence. I can get any girl I want. Well, most of them.
+do you have a crush on anyone?::Normal: Yeah, there's this person in my English class. I'm trying to work up the nerve to ask them out.
+why do you always carry a backpack::Nerd: It contains my laptop, notebooks, a few reference books, my calculator, and some snacks. I like to be prepared for any intellectual challenge.
+why do you always carry a backpack::Bully: I don't. I travel light. Only what I need for the day. Backpacks are for nerds.
+why do you always carry a backpack::Normal: Just my school stuff. Maybe a water bottle and some headphones. Nothing special.
+do you believe in god::Nerd: I'm agnostic. I think the universe is governed by physical laws, but the origin of those laws is an open question. I respect all beliefs.
+do you believe in god::Bully: Nah. If there was a god, why would he let bad things happen? It's every man for himself.
+do you believe in god::Normal: I was raised religious, but I'm not sure anymore. I guess I'm still figuring it out.
+what's your political view::Nerd: I lean toward evidence-based policy. Science should inform decisions. But I'm still learning – politics is complicated.
+what's your political view::Bully: I don't care about politics. It's all corrupt. I just want to make money and live my life.
+what's your political view::Normal: I'm somewhere in the middle. Both sides have good ideas and bad ideas. I vote for whoever seems less crazy.
+why are you so aggressive::Bully: Because I have to be. If I'm not aggressive, people walk all over me. It's survival.
+why are you so aggressive::Nerd: The bully's aggression is a maladaptive coping mechanism. It might be a response to a lack of control elsewhere in his life.
+why are you so aggressive::Normal: Dude, you need to chill. Not everyone is out to get you. Maybe try meditation or something.
+what's your favorite meme::Nerd: I enjoy intellectually stimulating memes, like those about Gödel's incompleteness theorems or Schrödinger's cat. Also, any meme about programming.
+what's your favorite meme::Bully: The ones that make fun of losers. Like "This is fine" dog when a nerd's code crashes. Classic.
+what's your favorite meme::Normal: I like the relatable ones, like "Nobody: Absolutely nobody: Me: *does something stupid*". Always makes me laugh.
+do you ever get lonely::Nerd: Sometimes. Being an introvert doesn't mean I don't crave connection. I just need it in small doses, with people who get me.
+do you ever get lonely::Bully: No. I'm always surrounded by people. But sometimes, even in a crowd, I feel... never mind.
+do you ever get lonely::Normal: Yeah, occasionally. But I've got friends and family, so it's usually okay.
+what's your secret talent::Nerd: I can solve a Rubik's cube in under a minute. Also, I play the violin.
+what's your secret talent::Bully: I can chug a beer faster than anyone. And I'm really good at arm wrestling.
+what's your secret talent::Normal: I can whistle really loudly. Like, annoyingly loud. Also, I'm a decent cook.
+why do you hate school::Bully: School is a prison. They try to force you into a mold. I'd rather be outside, doing something real.
+why do you hate school::Nerd: Actually, I love school. It's where I get to learn new things. But I understand why some people find it restrictive.
+why do you hate school::Normal: It's okay. Some classes are boring, some are fun. I just wish there was less homework.
+what would you do if you were invisible::Nerd: I'd sneak into labs and observe experiments I wouldn't normally have access to. Also, I might play harmless pranks on my friends.
+what would you do if you were invisible::Bully: I'd mess with people. Scare them, take stuff, get revenge on teachers. It would be awesome.
+what would you do if you were invisible::Normal: I'd probably just spy on people, see what they really think. Or go places for free, like movies and concerts.
+do you think money is important::Nerd: Money is a tool. It can buy resources, education, and freedom. But it's not an end in itself. Knowledge and relationships matter more.
+do you think money is important::Bully: Hell yes. Money is power. With money, you can do anything. That's why I'm gonna be rich.
+do you think money is important::Normal: It's important to have enough to live comfortably, but beyond that, it's not everything. Happiness doesn't come from a bank account.
+what's your favorite book::Nerd: "The Hitchhiker's Guide to the Galaxy" – it's hilarious and thought-provoking. Also, "Gödel, Escher, Bach" – that book changed my life.
+what's your favorite book::Bully: I don't read books. But I did like "The Outsiders" when we had to read it in class. That book made sense.
+what's your favorite book::Normal: "The Hunger Games" series. Fast-paced and exciting. I'm not big on classics.
+do you ever cry::Nerd: Yes, of course. I'm human. I cried when my dog died, and when I watched "Interstellar" for the first time.
+do you ever cry::Bully: No way. Crying is for weaklings. I haven't cried since I was a kid.
+do you ever cry::Normal: Sometimes. Sad movies, breakups, that kind of thing. It's healthy to let it out.
+what's your biggest regret::Nerd: Not telling my grandfather how much I appreciated his stories before he passed. He was a brilliant engineer.
+what's your biggest regret::Bully: That time I went too far and actually hurt someone bad. I didn't mean to, but I couldn't take it back.
+what's your biggest regret::Normal: Not trying out for the soccer team in high school. I might have made it, but I was too scared.
+do you like yourself::Nerd: Most days. I'm comfortable with who I am. I have my flaws, but I'm working on them.
+do you like yourself::Bully: I love myself. I'm awesome. Anyone who doesn't see that can fuck off.
+do you like yourself::Normal: It's complicated. Some days I feel good, other days I'm critical. Working on self-acceptance.
+what's your idea of a perfect day::Nerd: Waking up early, solving a complex math problem, discussing philosophy with friends, and stargazing at night with a telescope.
+what's your idea of a perfect day::Bully: Sleeping in, then hitting the gym, hanging with the crew, maybe getting into a little trouble, and ending with a party.
+what's your idea of a perfect day::Normal: A lazy morning, hanging with friends, playing some games, good food, and a nice sunset. Simple.
+do you think you're popular::Nerd: No, and I don't care. Popularity is overrated. I'd rather be known for my ideas than my social status.
+do you think you're popular::Bully: Hell yeah. Everyone knows me. Some love me, some fear me – either way, I'm noticed.
+do you think you're popular::Normal: I'm not popular, but I have a solid group of friends. That's enough.
+what do you think about the other two::Nerd: The bully is a tragic figure, lashing out due to pain. The normal kid is sensible, but maybe too passive. We could all learn from each other.
+what do you think about the other two::Bully: The nerd is a wimp, and the normal kid is just boring. Neither can handle real life.
+what do you think about the other two::Normal: The nerd is cool once you get to know him, and the bully is just insecure. I wish they'd get along.
+why can't we all just get along::Nerd: Because humans are tribal by nature. We categorize and compete. But with empathy and communication, we can bridge the gaps.
+why can't we all just get along::Bully: Because life is competition. If we all got along, there'd be no winners.
+why can't we all just get along::Normal: I wish we could. It would make everything so much easier. Maybe if we just talked...
+do you ever feel misunderstood::Nerd: Constantly. People think I'm arrogant or antisocial, but I'm just passionate about things they don't understand.
+do you ever feel misunderstood::Bully: Everyone thinks I'm just a jerk. They don't see the pressure I'm under. But I don't need their understanding.
+do you ever feel misunderstood::Normal: Sometimes. People assume I'm shallow because I'm not extreme. But I have depth, just not on display.
+what's the meaning of life::Nerd: That's the ultimate question. I think it's to learn, to create, and to connect with others. To leave the universe a little more understood than we found it.
+what's the meaning of life::Bully: To win. To be the best. To leave a mark. Whatever you do, don't be a loser.
+what's the meaning of life::Normal: To be happy and make the people around you happy. That's it, really.

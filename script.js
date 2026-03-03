@@ -3,7 +3,7 @@
 
 (function() {
     // ---------- Configuration ----------
-    const DIALOGUE_FILES = ['dialogue.txt', 'cuss-dialouge.txt','roasted-dialouge.txt', 'language.txt']; // Add your files here
+    const DIALOGUE_FILES = ['dialogue.txt', 'cuss-dialouge.txt','roasted-dialouge.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'sarcasm.txt']; // Add your files here
     const DB_NAME = 'PackAiDB';
     const DB_VERSION = 1;
     const STORE_NAME = 'learnedQA';
