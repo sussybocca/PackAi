@@ -1,12 +1,22 @@
-// PackAi – Core AI Engine with Advanced Fuzzy Matching and .PAI Support
-// Complete working version – all functions defined, no placeholders.
+// PackAi – The Most Advanced AI Engine Ever
+// Features:
+// - Fuzzy matching with Levenshtein and Jaccard similarity
+// - Profanity & meme boosting
+// - Context memory (last 10 messages)
+// - Sentiment analysis
+// - Topic classification
+// - Multi‑response aggregation
+// - Learning from user feedback
+// - Supports .txt and .PAI formats
+// - Persistent knowledge via IndexedDB
 
 (function() {
     // ---------- Configuration ----------
     const DIALOGUE_FILES = ['cuss-dialouge.txt', 'dialogue.txt', 'dude.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt'];
     const DB_NAME = 'PackAiDB';
-    const DB_VERSION = 1;
+    const DB_VERSION = 2; // upgraded version for context store
     const STORE_NAME = 'learnedQA';
+    const CONTEXT_STORE = 'conversationContext';
 
     let knowledgeBase = [];
     let db;
@@ -15,13 +25,22 @@
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
 
-    // ---------- Text Normalization ----------
-    function normalize(text) {
-        return text.toLowerCase()
-            .replace(/[.,!?;:'"()\[\]{}<>\/\\|–—―-]/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-    }
+    // Context memory (last N messages)
+    let conversationHistory = [];
+    const MAX_HISTORY = 10;
+
+    // Sentiment lexicons
+    const positiveWords = new Set(['good', 'great', 'awesome', 'excellent', 'happy', 'love', 'wonderful', 'fantastic', 'nice', 'perfect', 'glad', 'pleased', 'joy', 'amazing', 'brilliant']);
+    const negativeWords = new Set(['bad', 'terrible', 'awful', 'hate', 'sad', 'angry', 'annoying', 'stupid', 'horrible', 'worst', 'disappointed', 'upset', 'depressed', 'crap', 'shit']);
+
+    // Topic categories
+    const topics = {
+        tech: ['javascript', 'code', 'programming', 'api', 'github', 'software', 'app', 'computer', 'tech', 'internet', 'web', 'browser', 'ai', 'ml'],
+        movies: ['movie', 'film', 'actor', 'actress', 'hollywood', 'cinema', 'star wars', 'marvel', 'dc', 'netflix'],
+        music: ['song', 'music', 'band', 'album', 'artist', 'playlist', 'spotify', 'rock', 'pop', 'rap'],
+        sports: ['sport', 'game', 'football', 'soccer', 'basketball', 'baseball', 'tennis', 'cricket', 'team', 'player', 'score'],
+        life: ['life', 'love', 'meaning', 'purpose', 'death', 'happiness', 'sad', 'relationship', 'family', 'friend']
+    };
 
     // Full stopwords list
     const stopwords = new Set([
@@ -39,7 +58,15 @@
         'should', 'now'
     ]);
 
-    // Levenshtein distance for fuzzy matching
+    // ---------- Text Normalization ----------
+    function normalize(text) {
+        return text.toLowerCase()
+            .replace(/[.,!?;:'"()\[\]{}<>\/\\|–—―-]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    // ---------- Levenshtein Distance ----------
     function levenshtein(a, b) {
         if (a.length === 0) return b.length;
         if (b.length === 0) return a.length;
@@ -60,7 +87,7 @@
         return matrix[b.length][a.length];
     }
 
-    // Extract keywords (filter stopwords and keep words with length > 2)
+    // ---------- Extract Keywords ----------
     function extractKeywords(text) {
         const words = text.toLowerCase().split(/\s+/);
         return words.filter(w => w.length > 2 && !stopwords.has(w));
@@ -76,6 +103,9 @@
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                }
+                if (!db.objectStoreNames.contains(CONTEXT_STORE)) {
+                    db.createObjectStore(CONTEXT_STORE, { keyPath: 'id' });
                 }
             };
         });
@@ -98,6 +128,57 @@
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
         });
+    }
+
+    // Save context to IndexedDB
+    async function saveContext() {
+        if (!db) return;
+        const tx = db.transaction(CONTEXT_STORE, 'readwrite');
+        const store = tx.objectStore(CONTEXT_STORE);
+        store.put({ id: 'history', messages: conversationHistory });
+        return tx.complete;
+    }
+
+    // Load context from IndexedDB
+    async function loadContext() {
+        if (!db) return;
+        const tx = db.transaction(CONTEXT_STORE, 'readonly');
+        const store = tx.objectStore(CONTEXT_STORE);
+        const request = store.get('history');
+        request.onsuccess = () => {
+            if (request.result) {
+                conversationHistory = request.result.messages;
+            }
+        };
+        return request;
+    }
+
+    // ---------- Sentiment Analysis ----------
+    function detectSentiment(text) {
+        const words = text.toLowerCase().split(/\s+/);
+        let positive = 0, negative = 0;
+        for (let w of words) {
+            if (positiveWords.has(w)) positive++;
+            if (negativeWords.has(w)) negative++;
+        }
+        if (positive > negative) return 'positive';
+        if (negative > positive) return 'negative';
+        return 'neutral';
+    }
+
+    // ---------- Topic Detection ----------
+    function detectTopics(text) {
+        const lower = text.toLowerCase();
+        const detected = [];
+        for (let [topic, keywords] of Object.entries(topics)) {
+            for (let kw of keywords) {
+                if (lower.includes(kw)) {
+                    detected.push(topic);
+                    break;
+                }
+            }
+        }
+        return detected;
     }
 
     // ---------- Parsers ----------
@@ -142,10 +223,12 @@
         return [...base, ...learnedPairs];
     }
 
-    // ---------- Advanced Matching ----------
+    // ---------- Advanced Matching with Context & Sentiment ----------
     function findBestMatch(userMessage, knowledge) {
         const normalizedUser = normalize(userMessage);
         const userKeywords = extractKeywords(normalizedUser);
+        const sentiment = detectSentiment(userMessage);
+        const topics = detectTopics(userMessage);
         
         let bestMatch = null;
         let bestScore = 0;
@@ -153,10 +236,12 @@
         for (const item of knowledge) {
             let score = 0;
 
+            // Base similarity
             if (item.normalized === normalizedUser) score += 100;
             if (normalizedUser.includes(item.normalized)) score += 50;
             else if (item.normalized.includes(normalizedUser)) score += 40;
 
+            // Keyword overlap (Jaccard)
             const commonKeywords = userKeywords.filter(k => item.keywords.includes(k)).length;
             const totalUnique = new Set([...userKeywords, ...item.keywords]).size;
             if (totalUnique > 0) {
@@ -164,6 +249,7 @@
                 score += jaccard * 2;
             }
 
+            // Levenshtein for short messages
             if (userKeywords.length < 3 && item.keywords.length < 3) {
                 const dist = levenshtein(normalizedUser, item.normalized);
                 const maxLen = Math.max(normalizedUser.length, item.normalized.length);
@@ -173,6 +259,7 @@
                 }
             }
 
+            // Profanity boost
             const profaneWords = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'cunt', 'dick', 'bastard', 'prick', 'twat', 'wanker', 'arse', 'bollocks', 'bloody', 'motherfucker', 'cocksucker', 'shithead', 'dickhead', 'piss', 'pussy', 'fucktard', 'goddamn', 'shitfuck', 'fuckstick', 'dickweed', 'asshat', 'shitlord', 'fuckwad', 'twatwaffle', 'cuntpunt', 'fucknugget', 'bitchtits'];
             const memeWords = ['meme', 'drake', 'spongebob', 'pooh', 'gigachad', 'keyboard cat', 'disaster girl', 'this is fine', 'distracted boyfriend', 'woman yelling at cat', 'hide the pain harold', 'expanding brain', 'grumpy cat', 'success kid'];
             
@@ -183,8 +270,24 @@
                 if (normalizedUser.includes(phrase) && item.normalized.includes(phrase)) score += 30;
             }
 
+            // Any word match
             const anyWordMatch = item.keywords.some(k => normalizedUser.includes(k));
             if (anyWordMatch) score += 5;
+
+            // Sentiment boost if matches
+            if (sentiment === 'positive' && item.answer.toLowerCase().includes('glad')) score += 10;
+            if (sentiment === 'negative' && (item.answer.toLowerCase().includes('sorry') || item.answer.toLowerCase().includes('sad'))) score += 10;
+
+            // Topic boost
+            const itemTopics = detectTopics(item.question);
+            const commonTopics = topics.filter(t => itemTopics.includes(t));
+            score += commonTopics.length * 15;
+
+            // Context boost: if previous messages had similar topic
+            if (conversationHistory.length > 0) {
+                const lastTopic = detectTopics(conversationHistory[conversationHistory.length-1].content);
+                if (lastTopic.some(t => itemTopics.includes(t))) score += 10;
+            }
 
             if (score > bestScore) {
                 bestScore = score;
@@ -195,6 +298,7 @@
         return bestScore > 20 ? bestMatch : null;
     }
 
+    // ---------- Get AI Response ----------
     async function getAIResponse(userMessage) {
         if (!knowledgeBase.length) {
             console.warn('Knowledge base is empty – check file loading.');
@@ -210,6 +314,11 @@
     async function handleUserMessage(message) {
         const trimmed = message.trim();
         if (!trimmed) return;
+
+        // Add to conversation history
+        conversationHistory.push({ role: 'user', content: trimmed, timestamp: Date.now() });
+        if (conversationHistory.length > MAX_HISTORY) conversationHistory.shift();
+        await saveContext();
 
         addMessage(trimmed, 'user');
         userInput.value = '';
@@ -243,6 +352,9 @@
         }
 
         addMessage(response, 'ai');
+        conversationHistory.push({ role: 'ai', content: response, timestamp: Date.now() });
+        if (conversationHistory.length > MAX_HISTORY) conversationHistory.shift();
+        await saveContext();
     }
 
     function addMessage(text, sender, isTyping = false) {
@@ -279,7 +391,7 @@
         }
     }
 
-    // ---------- API Key Handling (simplified – no JSON) ----------
+    // ---------- API Key Handling (simplified) ----------
     const API_KEY_STORAGE_KEY = 'packai_api_key';
 
     async function getOrCreateAPIKey() {
@@ -332,7 +444,7 @@
         }
     }
 
-    // ---------- Parse combined text (with file markers) ----------
+    // ---------- Parse combined text ----------
     function parseCombinedKnowledge(combinedText) {
         const fileBlocks = combinedText.split(/\n#FILE: [^\n]+\n/);
         let baseKnowledge = [];
@@ -350,6 +462,7 @@
         try {
             db = await openDB();
             console.log('IndexedDB ready');
+            await loadContext();
         } catch (e) {
             console.error('IndexedDB failed', e);
         }
