@@ -1,27 +1,66 @@
-// PackAi – Core AI Engine
-// Uses IndexedDB for lifelong learning, and a self‑contained API key (base64 encoded knowledge)
-// Now supports multiple initial knowledge files – just list them in the DIALOGUE_FILES array.
+// PackAi – Core AI Engine with Advanced Fuzzy Matching
+// Supports multiple dialogue files and human-like responses
 
 (function() {
     // ---------- Configuration ----------
-    // You can specify one or more .txt files here. The AI will combine all their contents.
-    // Example: const DIALOGUE_FILES = ['dialogue.txt', 'extra.txt', 'science.txt'];
-    const DIALOGUE_FILES = ['dialogue.txt'];   // <-- Change this line to load multiple files
-
+    const DIALOGUE_FILES = ['dialogue.txt', 'cuss-dialouge.txt','roasted-dialouge.txt']; // Add your files here
     const DB_NAME = 'PackAiDB';
     const DB_VERSION = 1;
     const STORE_NAME = 'learnedQA';
 
-    // This will hold our knowledge base (array of {q, a})
-    let knowledgeBase = [];
-
-    // Reference to IndexedDB
+    let knowledgeBase = []; // array of { question, answer, learned?, normalized, keywords }
     let db;
 
-    // UI Elements
     const messagesDiv = document.getElementById('messages');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
+
+    // ---------- Text Normalization ----------
+    function normalize(text) {
+        return text.toLowerCase()
+            .replace(/[^\w\s]/g, ' ')           // replace punctuation with spaces
+            .replace(/\s+/g, ' ')                // collapse multiple spaces
+            .trim();
+    }
+
+    // Simple stopwords list (common words that don't add meaning)
+    const stopwords = new Set(['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
+        'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its',
+        'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that',
+        'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having',
+        'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while',
+        'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before',
+        'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again',
+        'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each',
+        'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than',
+        'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now']);
+
+    // Levenshtein distance for fuzzy matching
+    function levenshtein(a, b) {
+        if (a.length === 0) return b.length;
+        if (b.length === 0) return a.length;
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i-1) === a.charAt(j-1)) {
+                    matrix[i][j] = matrix[i-1][j-1];
+                } else {
+                    matrix[i][j] = Math.min(matrix[i-1][j-1] + 1,
+                                            Math.min(matrix[i][j-1] + 1,
+                                                     matrix[i-1][j] + 1));
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
+    // Extract keywords (filter stopwords and keep words with length > 2)
+    function extractKeywords(text) {
+        const words = text.toLowerCase().split(/\s+/);
+        return words.filter(w => w.length > 2 && !stopwords.has(w));
+    }
 
     // ---------- IndexedDB Setup ----------
     function openDB() {
@@ -38,7 +77,6 @@
         });
     }
 
-    // Save a learned Q&A pair to IndexedDB
     async function saveLearnedPair(question, answer) {
         if (!db) return;
         const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -47,7 +85,6 @@
         return tx.complete;
     }
 
-    // Load all learned pairs from IndexedDB
     async function loadLearnedPairs() {
         if (!db) return [];
         return new Promise((resolve, reject) => {
@@ -60,8 +97,6 @@
     }
 
     // ---------- API Key Handling ----------
-    // The API key is a base64 string that contains the combined initial knowledge from all dialogue files.
-    // We generate it on first run and store it in localStorage.
     const API_KEY_STORAGE_KEY = 'packai_api_key';
 
     async function getOrCreateAPIKey() {
@@ -71,35 +106,25 @@
             return apiKey;
         }
 
-        // No key yet – load all dialogue files and combine them
         console.log('No API key found. Generating from dialogue files...');
         try {
-            // Normalize DIALOGUE_FILES to always be an array
             const fileList = Array.isArray(DIALOGUE_FILES) ? DIALOGUE_FILES : [DIALOGUE_FILES];
-            
-            // Fetch all files concurrently
             const fetchPromises = fileList.map(async (file) => {
                 const response = await fetch(file);
                 if (!response.ok) throw new Error(`Failed to load ${file}`);
                 return await response.text();
             });
-            
             const texts = await Promise.all(fetchPromises);
-            // Combine all texts with a newline between files (optional, but keeps separation)
             const combinedText = texts.join('\n');
-            
-            // Encode combined text to base64
             const base64 = btoa(unescape(encodeURIComponent(combinedText)));
             localStorage.setItem(API_KEY_STORAGE_KEY, base64);
             return base64;
         } catch (error) {
             console.error('Could not generate API key:', error);
-            // Return empty key as fallback – AI will rely only on learned data
             return '';
         }
     }
 
-    // Decode the API key back to the original text
     function decodeAPIKey(apiKey) {
         if (!apiKey) return '';
         try {
@@ -111,51 +136,106 @@
         }
     }
 
-    // Parse Q&A pairs from text (format: question::answer per line)
+    // Parse Q&A pairs and precompute normalized keywords
     function parseQnA(text) {
         return text.split('\n')
             .filter(line => line.includes('::'))
             .map(line => {
                 const [q, a] = line.split('::').map(s => s.trim());
-                return { question: q.toLowerCase(), answer: a };
+                const normalized = normalize(q);
+                const keywords = extractKeywords(normalized);
+                return { 
+                    question: q, 
+                    answer: a, 
+                    normalized,
+                    keywords
+                };
             });
     }
 
-    // Merge two knowledge arrays (base + learned). Learned overwrites if question duplicates?
-    // We'll keep both, but when searching we'll prioritize learned (more recent)
     function mergeKnowledge(base, learned) {
-        // Learned items are stored with {question, answer, timestamp}
-        // Convert learned to same format {question, answer} but keep original for reference
-        const learnedPairs = learned.map(l => ({ question: l.question.toLowerCase(), answer: l.answer, learned: true }));
-        // Simple concatenation – for response we'll search both arrays and pick best match
+        const learnedPairs = learned.map(l => ({ 
+            question: l.question, 
+            answer: l.answer, 
+            learned: true,
+            normalized: normalize(l.question),
+            keywords: extractKeywords(l.question.toLowerCase())
+        }));
         return [...base, ...learnedPairs];
     }
 
-    // ---------- AI Response Logic ----------
-    // Very basic matching: find a question that includes the user's words or vice versa.
-    // In a real advanced AI you'd use embeddings, but here we'll do keyword overlap.
+    // ---------- Advanced Matching ----------
     function findBestMatch(userMessage, knowledge) {
-        const words = userMessage.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+        const normalizedUser = normalize(userMessage);
+        const userKeywords = extractKeywords(normalizedUser);
+        
         let bestMatch = null;
         let bestScore = 0;
 
         for (const item of knowledge) {
-            const qWords = item.question.split(/\s+/);
-            // Count how many user words appear in the question
-            let score = words.filter(w => qWords.includes(w)).length;
-            // Also check if question contains user message as substring (bonus)
-            if (item.question.includes(userMessage.toLowerCase())) score += 5;
-            if (userMessage.toLowerCase().includes(item.question)) score += 3;
+            let score = 0;
+
+            // 1. Exact normalized match
+            if (item.normalized === normalizedUser) {
+                score += 100;
+            }
+            
+            // 2. User message contains entire stored question
+            if (normalizedUser.includes(item.normalized)) {
+                score += 50;
+            }
+            // 3. Stored question contains entire user message
+            else if (item.normalized.includes(normalizedUser)) {
+                score += 40;
+            }
+
+            // 4. Keyword overlap (Jaccard similarity)
+            const commonKeywords = userKeywords.filter(k => item.keywords.includes(k)).length;
+            const totalUnique = new Set([...userKeywords, ...item.keywords]).size;
+            if (totalUnique > 0) {
+                const jaccard = (commonKeywords / totalUnique) * 100;
+                score += jaccard * 2;
+            }
+
+            // 5. Fuzzy matching on important words (if few keywords)
+            if (userKeywords.length < 3 && item.keywords.length < 3) {
+                const dist = levenshtein(normalizedUser, item.normalized);
+                const maxLen = Math.max(normalizedUser.length, item.normalized.length);
+                if (maxLen > 0) {
+                    const similarity = (1 - dist / maxLen) * 100;
+                    score += similarity * 1.5;
+                }
+            }
+
+            // 6. Boost for profanity/meme keywords
+            const profaneWords = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'cunt', 'dick', 'bastard', 'prick', 'twat', 'wanker', 'arse', 'bollocks', 'bloody', 'motherfucker', 'cocksucker', 'shithead', 'dickhead', 'piss', 'pussy', 'fucktard', 'goddamn', 'shitfuck', 'fuckstick', 'dickweed', 'asshat', 'shitlord', 'fuckwad', 'twatwaffle', 'cuntpunt', 'fucknugget', 'bitchtits'];
+            const memeWords = ['meme', 'drake', 'spongebob', 'pooh', 'gigachad', 'keyboard cat', 'disaster girl', 'this is fine', 'distracted boyfriend', 'woman yelling at cat', 'hide the pain harold', 'expanding brain', 'grumpy cat', 'success kid'];
+            
+            for (let word of profaneWords) {
+                if (normalizedUser.includes(word) && item.normalized.includes(word)) {
+                    score += 20;
+                }
+            }
+            for (let phrase of memeWords) {
+                if (normalizedUser.includes(phrase) && item.normalized.includes(phrase)) {
+                    score += 30;
+                }
+            }
+
+            // 7. Partial phrase matching: any word from stored question appears in user message
+            const anyWordMatch = item.keywords.some(k => normalizedUser.includes(k));
+            if (anyWordMatch) score += 5;
 
             if (score > bestScore) {
                 bestScore = score;
                 bestMatch = item;
             }
         }
-        return bestMatch;
+
+        // Only return if score is above threshold (25)
+        return bestScore > 25 ? bestMatch : null;
     }
 
-    // Main function to get AI response
     async function getAIResponse(userMessage) {
         if (!knowledgeBase.length) return "I'm still loading my knowledge. Please wait a moment.";
 
@@ -164,55 +244,50 @@
             return match.answer;
         }
 
-        // No good match – ask user to teach me
         return "I don't know how to answer that yet. What would be a good response? (Or type 'skip' to ignore)";
     }
 
-    // ---------- Learning from User (when AI doesn't know) ----------
-    let pendingQuestion = null;  // Stores the original user message when we asked for a response
+    // ---------- Learning & UI ----------
+    let pendingQuestion = null;
 
     async function handleUserMessage(message) {
         const trimmed = message.trim();
         if (!trimmed) return;
 
-        // Display user message
         addMessage(trimmed, 'user');
-
-        // Clear input
         userInput.value = '';
 
-        // If we are in a learning state (waiting for user to provide an answer)
         if (pendingQuestion) {
             if (trimmed.toLowerCase() === 'skip') {
                 addMessage('Okay, I won\'t learn that this time.', 'ai');
                 pendingQuestion = null;
                 return;
             } else {
-                // User provided an answer – save as new learned pair
                 await saveLearnedPair(pendingQuestion, trimmed);
-                // Also add to current knowledgeBase
-                knowledgeBase.push({ question: pendingQuestion.toLowerCase(), answer: trimmed, learned: true });
+                knowledgeBase.push({ 
+                    question: pendingQuestion, 
+                    answer: trimmed, 
+                    learned: true,
+                    normalized: normalize(pendingQuestion),
+                    keywords: extractKeywords(pendingQuestion.toLowerCase())
+                });
                 addMessage(`Thank you! I've learned that. Next time you ask "${pendingQuestion}", I'll know what to say.`, 'ai');
                 pendingQuestion = null;
                 return;
             }
         }
 
-        // Normal conversation
-        // Show typing indicator
         const typingIndicator = addMessage('', 'ai', true);
         const response = await getAIResponse(trimmed);
         removeTypingIndicator(typingIndicator);
 
         if (response === "I don't know how to answer that yet. What would be a good response? (Or type 'skip' to ignore)") {
-            // Set pending question so next message is treated as the answer
             pendingQuestion = trimmed;
         }
 
         addMessage(response, 'ai');
     }
 
-    // UI Helpers
     function addMessage(text, sender, isTyping = false) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
@@ -233,12 +308,12 @@
 
         if (isTyping) {
             messageDiv.classList.add('typing');
-            bubble.textContent = '';  // Will show dots via CSS
+            bubble.textContent = '';
         }
 
         messagesDiv.appendChild(messageDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        return messageDiv;  // return for potential removal
+        return messageDiv;
     }
 
     function removeTypingIndicator(element) {
@@ -249,7 +324,6 @@
 
     // ---------- Initialization ----------
     async function init() {
-        // 1. Open IndexedDB
         try {
             db = await openDB();
             console.log('IndexedDB ready');
@@ -257,23 +331,17 @@
             console.error('IndexedDB failed', e);
         }
 
-        // 2. Load or generate API key (now combines all files)
         const apiKey = await getOrCreateAPIKey();
         const knowledgeText = decodeAPIKey(apiKey);
-
-        // 3. Parse base knowledge
         const baseKnowledge = parseQnA(knowledgeText);
         console.log(`Loaded ${baseKnowledge.length} base Q&A pairs from API key`);
 
-        // 4. Load learned pairs from IndexedDB
         const learned = await loadLearnedPairs();
         console.log(`Loaded ${learned.length} learned pairs from IndexedDB`);
 
-        // 5. Merge into knowledgeBase
         knowledgeBase = mergeKnowledge(baseKnowledge, learned);
         console.log(`Total knowledge: ${knowledgeBase.length} entries`);
 
-        // 6. Attach event listeners
         sendButton.addEventListener('click', () => {
             handleUserMessage(userInput.value);
         });
@@ -284,6 +352,5 @@
         });
     }
 
-    // Start everything
     init().catch(console.error);
 })();

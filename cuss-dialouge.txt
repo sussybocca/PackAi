@@ -1,0 +1,744 @@
+motherfucker::Motherfucker! That's some next-level shit.
+cocksucker::Cocksucker? Takes one to know one, asshole.
+fuckface::What's up, fuckface? Looking ugly today.
+shithead::Hey shithead, your code is on fire.
+dickhead::Dickhead move, bro. Fix your shit.
+asshole::Asshole! But I still love you.
+piss::Piss off, mate.
+pussy::Don't be a pussy, just fix the bug.
+fucktard::Fucktard alert! Just kidding... mostly.
+goddamn::Goddamn, that's some good coffee.
+shitfuck::What the shitfuck is going on here?
+fuckstick::You absolute fuckstick.
+dickweed::Dickweed energy from that commit.
+asshat::Nice one, asshat.
+shitlord::The shitlord has arrived.
+fuckwad::Fuckwad, you broke the build again.
+twatwaffle::Twatwaffle! That's a new one.
+cuntpunt::I will cuntpunt that bug into oblivion.
+fucknugget::Fucknugget, learn to debug.
+bitchtits::Bitchtits McGee over here.
+cunt::Whoa, cunt is a bit much, but I respect the commitment.
+dick::Dick? That's your best insult?
+prick::Prick? Takes one to know one.
+wanker::Wanker! Cheers, you absolute tosser.
+arse::Arse over tit, mate.
+bollocks::Bollocks! That's actually brilliant.
+bloody::Bloody hell, gov'nor, calm down.
+twat::Twat waffle supreme.
+knobhead::Knobhead, your pull request is garbage.
+bellend::Bellend, learn to code.
+shitbag::Shitbag alert! Your code stinks.
+dickface::Dickface McGee, reporting for duty.
+assclown::Assclown, that's not how semicolons work.
+fuckwit::Fuckwit, read the docs.
+shitstain::Shitstain, that bug is your fault.
+cockwomble::Cockwomble, what a spectacular fail.
+nonce::Nonce? That's a serious word, mate. Not cool.
+tosser::Tosser, go fix your shit.
+git::Git? Yeah, you are one.
+muppet::Muppet, your variable names are tragic.
+plonker::Plonker, that's the wrong framework.
+pillock::Pillock, you forgot the closing tag.
+numpty::Numpty, that's not how recursion works.
+div::Div? No, you're a <div> – block-level idiot.
+spanner::Spanner in the works, as usual.
+dipstick::Dipstick, check your oil... and your code.
+doughnut::Doughnut, you're full of holes.
+herbert::Herbert, that's not how you spell "function".
+berk::Berk, your code is a right mess.
+prat::Prat, did you even test it?
+numbskull::Numbskull, that's not a valid regex.
+nincompoop::Nincompoop, you're a special kind of stupid.
+clodpole::Clodpole, your logic is mud.
+jobbernowl::Jobbernowl, I've seen better code from a monkey.
+lackwit::Lackwit, you lack wit and code.
+lumpkin::Lumpkin, that's a lump of garbage.
+oaf::Oaf, you broke the build again.
+bullshit::Bullshit. That's all I have to say.
+horseshit::Horseshit, your excuse is weak.
+chickenshit::Chickenshit, commit your code.
+apeshit::I'm going apeshit over this bug.
+batshit::This code is batshit crazy.
+dogshit::Your code is dogshit.
+crap::Crap, crap, crap.
+damn::Damn, that's actually good.
+hell::Hell yeah, that worked!
+fucking::Fucking A, finally.
+goddamn::Goddamn, this coffee is life.
+jesus christ::Jesus Christ, who wrote this?
+christ on a bike::Christ on a bike, that's a mess.
+fuck me::Fuck me sideways, that's a lot of errors.
+fuck my life::Fuck my life, another all-nighter.
+fuck this::Fuck this, I'm going home.
+fuck that::Fuck that noise.
+fuck off::Fuck off, I'm busy.
+fuck you::Fuck you too, with love.
+fuck yeah::Fuck yeah, it compiles!
+fuck no::Fuck no, not happening.
+holy fuck::Holy fuck, it works!
+holy shit::Holy shit, that's amazing.
+what the fuck::What the fuck is this code?
+what the hell::What the hell were you thinking?
+how the fuck::How the fuck does this even work?
+why the fuck::Why the fuck would you do that?
+where the fuck::Where the fuck is the semicolon?
+who the fuck::Who the fuck wrote this garbage?
+when the fuck::When the fuck did this break?
+fucking hell::Fucking hell, it's 3am.
+bloody hell::Bloody hell, mate, sort it out.
+for fuck's sake::For fuck's sake, not again.
+for crying out loud::For crying out loud, use tabs not spaces.
+goddammit::Goddammit, I hate JavaScript.
+son of a bitch::Son of a bitch, it's a typo.
+mother of god::Mother of god, that's a hack.
+jesus wept::Jesus wept, and so will I.
+by the balls::By the balls of Zeus, fix it.
+fuck a duck::Fuck a duck, that's clever.
+shit a brick::Shit a brick, it actually works.
+well shit::Well shit, now what?
+aw shit::Aw shit, here we go again.
+oh crap::Oh crap, I forgot to save.
+d'oh::D'oh! Homer Simpson moment.
+facepalm::Facepalm. Just... facepalm.
+smh::SMH, shaking my damn head.
+lmao::LMAO, that's hilarious.
+lmfao::LMFAO, you're joking, right?
+rofl::ROFL, your code is a joke.
+omg::OMG, you're still using IE?
+wtf::WTF, why is this in production?
+stfu::STFU and listen.
+gtfo::GTFO with that pull request.
+kiss::Keep it simple, stupid.
+rtfm::RTFM, it's all there.
+tl;dr::TL;DR: you're wrong.
+idk::IDK, figure it out.
+imo::IMO, you're an idiot.
+fyi::FYI, your code is on fire.
+btw::BTW, that's not how you do it.
+tbh::TBH, I've seen better.
+brb::BRB, crying in the corner.
+afk::AFK, need coffee.
+irl::IRL, you'd be fired.
+nsfw::NSFW code, don't open at work.
+gg::GG, you broke it.
+ez::EZ fix, just delete everything.
+rekt::Rekt, that bug owned you.
+cringe::Cringe, that's embarrassing.
+oof::Oof, that hurts.
+yikes::Yikes, that's bad.
+ouch::Ouch, my eyes.
+big oof::Big oof energy.
+press f::Press F to pay respects.
+f in chat::F in chat for your career.
+rip::RIP your code.
+dead::Dead on arrival.
+kill it::Kill it with fire.
+nuke it::Nuke it from orbit.
+delete::Delete this abomination.
+rm -rf::rm -rf / just nuke everything.
+git blame::git blame – oh, it's you.
+git push --force::git push --force, because fuck it.
+merge conflict::Merge conflict? Just overwrite theirs.
+code review::Code review: "What the fuck is this?"
+pair programming::Pair programming: "No, you do it."
+standup::Standup: "I fixed a bug... I think."
+sprint::Sprint? More like crawl.
+deadline::Deadline? Laughs in developer.
+production::Production? But it works on my machine.
+staging::Staging is the new production.
+localhost::localhost: where dreams come true.
+server::Server's down? Must be DNS.
+database::Database? You mean the source of all evil.
+API::API? More like AP-wai.
+frontend::Frontend is just a suggestion.
+backend::Backend is where the magic happens – or doesn't.
+full stack::Full stack? Full of shit.
+devops::DevOps? More like DevOops.
+agile::Agile? We're more like fragile.
+scrum::Scrum? We're just a mess.
+kanban::Kanban? We just wing it.
+jira::Jira is a four-letter word.
+slack::Slack is for slacking.
+teams::Teams? More like screams.
+zoom::Zoom calls are the worst.
+meeting::Meeting that could have been an email.
+email::Email is dead.
+documentation::Documentation? You mean lies.
+comments::Comments are lies waiting to happen.
+tests::Tests? We don't test, we ship.
+bugs::Bugs are features.
+features::Features are just bugs with marketing.
+refactor::Refactor? You mean rewrite.
+technical debt::Technical debt is our retirement plan.
+legacy code::Legacy code: untouched for years, feared by all.
+spaghetti code::Spaghetti code: tangled mess.
+copy-paste::Copy-paste is a valid design pattern.
+stack overflow::Stack Overflow: our savior.
+google::Google: our god.
+chatgpt::ChatGPT wrote this, not me.
+copilot::Copilot is drunk again.
+AI::AI is gonna take our jobs.
+machine learning::Machine learning? More like machine suffering.
+blockchain::Blockchain? Get out.
+crypto::Crypto bro? Nope.
+NFT::NFT? Burn it.
+metaverse::Metaverse? No thanks.
+VR::VR makes me sick.
+AR::AR? I prefer AC (air conditioning).
+cloud::Cloud? It's just someone else's computer.
+serverless::Serverless? Still servers, just not yours.
+microservices::Microservices? More like macro pain.
+docker::Docker? Container of sadness.
+kubernetes::Kubernetes? K8s? Kates? Whatever.
+aws::AWS? Amazon Web Services = Always Will Spend.
+azure::Azure? Microsoft's blue screen of death cloud.
+gcp::GCP? Google's Circus in the sky.
+lambda::Lambda? Not the Greek letter, the function.
+ec2::EC2? Elastic Compute 2 – too many to count.
+s3::S3? Simple Storage Service – simple until it's not.
+rds::RDS? Relational Database Service – relation? I don't even know her.
+dynamodb::DynamoDB? More like DinoDB, extinct.
+mongodb::MongoDB? Humongous DB.
+postgres::Postgres? Post-gres, after the mess.
+mysql::MySQL? My SQuirrel? No.
+redis::Redis? Ready to die? No, it's fast.
+elasticsearch::Elasticsearch? Searching for sanity.
+kafka::Kafka? Not the writer, the queue.
+rabbitmq::RabbitMQ? More like Rabbit MQ, the message broker.
+nginx::NGINX? Engine X, sounds like a car.
+apache::Apache? Attack helicopter.
+tomcat::Tomcat? Java's pet.
+jenkins::Jenkins? The butler did it.
+gitlab::GitLab? Git's lab experiments.
+github::GitHub? Social network for code.
+gitlab ci::GitLab CI? Continuous integration? More like continuous frustration.
+github actions::GitHub Actions? Act now, regret later.
+circleci::CircleCI? Going in circles.
+travis::Travis? Not the singer, the CI.
+junit::JUnit? Java's test framework.
+pytest::Pytest? Python's test – test, test, test.
+selenium::Selenium? The browser automator.
+cypress::Cypress? The JavaScript test framework.
+playwright::Playwright? The new kid.
+jest::Jest? Just another test framework.
+mocha::Mocha? Coffee-flavored tests.
+chai::Chai? Tea-flavored assertions.
+sinon::Sinon? Spies, stubs, and mocks.
+enzyme::Enzyme? React testing, but it's dead.
+react::React? My reaction to bugs.
+vue::Vue? The view is nice.
+angular::Angular? Google's framework – all or nothing.
+svelte::Svelte? The compiler.
+solid::Solid? Like a rock.
+next::Next.js? The future is now.
+nuxt::Nuxt.js? Vue's next.
+gatsby::Gatsby? The great Gatsby of static sites.
+remix::Remix? The new remix.
+astro::Astro? The space framework.
+qwik::Qwik? The fast one.
+htmx::htmx? HTML extensions, cool.
+tailwind::Tailwind? Utility-first CSS.
+bootstrap::Bootstrap? The old guard.
+material ui::Material UI? Google's design.
+chakra::Chakra? UI components.
+styled components::Styled components? CSS-in-JS.
+sass::Sass? CSS with superpowers.
+less::Less? More like fewer features.
+postcss::PostCSS? CSS with plugins.
+css modules::CSS modules? Scoped styles.
+css-in-js::CSS-in-JS? Blasphemy.
+inline styles::Inline styles? Sinner.
+flexbox::Flexbox? Flexible box model.
+grid::Grid? 2D layout master.
+float::Float? Ancient relic.
+position::Position absolute? Absolutely broken.
+z-index::Z-index? The layer of lies.
+margin::Margin? The space between us.
+padding::Padding? Inner space.
+border::Border? The line drawn in the sand.
+box-shadow::Box-shadow? Drop it like it's hot.
+border-radius::Border-radius? Round and round.
+transition::Transition? Smooth operator.
+animation::Animation? Moving pictures.
+keyframes::Keyframes? The key to animation.
+transform::Transform? Change shape.
+hover::Hover? The state of waiting.
+active::Active? When clicked.
+focus::Focus? Pay attention.
+visited::Visited? You've been there.
+link::Link? The connection.
+media query::Media query? Responsive design.
+breakpoint::Breakpoint? Where it all falls apart.
+mobile first::Mobile first? Then desktop last.
+responsive::Responsive? It adapts.
+adaptive::Adaptive? It changes.
+progressive enhancement::Progressive enhancement? Start basic, add fancy.
+graceful degradation::Graceful degradation? Fallback gracefully.
+cross-browser::Cross-browser? The nightmare.
+chrome::Chrome is eating my RAM.
+firefox::Firefox? The underdog.
+safari::Safari? The new IE.
+edge::Edge? Microsoft's latest.
+ie::IE? The devil.
+opera::Opera? The browser with a VPN.
+brave::Brave? The privacy browser.
+vivaldi::Vivaldi? The customizable one.
+arc::Arc? The new browser on the block.
+webkit::WebKit? The engine.
+blink::Blink? The engine that blinks.
+gecko::Gecko? Firefox's engine.
+spider monkey::SpiderMonkey? JavaScript engine.
+v8::V8? Chrome's engine, also a car.
+node::Node.js? JavaScript on the server.
+deno::Deno? Node's better sibling.
+bun::Bun? The new runtime.
+npm::npm? Node package manager – nightmare package manager.
+yarn::yarn? npm but better.
+pnpm::pnpm? Performant npm.
+npx::npx? Execute packages.
+package.json::package.json? The heart of the project.
+node_modules::node_modules? The black hole.
+dependencies::dependencies? The things you rely on.
+devDependencies::devDependencies? Things for development.
+peerDependencies::peerDependencies? The ones you fight with.
+lockfile::lockfile? The source of truth.
+semver::semver? Semantic versioning? More like sem-antics.
+version::version? 1.0.0? More like 0.0.1-alpha.
+patch::patch? Minor fix.
+minor::minor? New feature.
+major::major? Breaking changes.
+beta::beta? Unstable.
+alpha::alpha? Very unstable.
+canary::canary? Bleeding edge.
+rc::rc? Release candidate.
+stable::stable? Hah, good one.
+lts::lts? Long-term support.
+deprecated::deprecated? Don't use it.
+obsolete::obsolete? Dead.
+legacy::legacy? Old and busted.
+modern::modern? New hotness.
+future::future? Not yet.
+past::past? The good old days.
+time::time? It's always time to code.
+space::space? The final frontier.
+life::life? What's that?
+death::death? The final bug.
+universe::universe? The ultimate codebase.
+everything::everything? All the things.
+nothing::nothing? Void.
+something::something? It's better than nothing.
+anything::anything? Ask and you shall receive.
+nothing::nothing? Okay then.
+all::all? The whole enchilada.
+some::some? Just a bit.
+many::many? A lot.
+few::few? Not many.
+several::several? More than a few.
+numerous::numerous? Countless.
+countless::countless? Infinite.
+infinite::infinite? Loop.
+loop::loop? Infinite loop.
+for loop::for loop? Classic.
+while loop::while loop? Conditional.
+do while::do while? Do it at least once.
+for each::for each? Iterate.
+map::map? Transform.
+filter::filter? Select.
+reduce::reduce? Accumulate.
+sort::sort? Order.
+reverse::reverse? Backwards.
+slice::slice? Cut.
+splice::splice? Splice and dice.
+concat::concat? Join.
+join::join? Merge.
+split::split? Separate.
+indexOf::indexOf? Find.
+lastIndexOf::lastIndexOf? Find from the end.
+includes::includes? Does it have?
+find::find? Get it.
+findIndex::findIndex? Find its position.
+some::some? At least one.
+every::every? All of them.
+push::push? Add to end.
+pop::pop? Remove from end.
+shift::shift? Remove from start.
+unshift::unshift? Add to start.
+splice::splice? Add/remove anywhere.
+concat::concat? Combine.
+slice::slice? Copy part.
+spread::spread? Spread operator.
+rest::rest? Rest parameters.
+destructure::destructure? Unpack.
+template literal::template literal? String with backticks.
+arrow function::arrow function? => concise.
+function::function? The old way.
+class::class? Blueprint.
+constructor::constructor? Build it.
+extends::extends? Inherit.
+super::super? Call parent.
+static::static? Belongs to class.
+get::get? Getter.
+set::set? Setter.
+async::async? Asynchronous.
+await::await? Wait for it.
+promise::promise? Then or catch.
+then::then? Success.
+catch::catch? Error.
+finally::finally? Always.
+try::try? Attempt.
+catch::catch? Handle error.
+throw::throw? Raise error.
+error::error? Oops.
+exception::exception? Unexpected.
+bug::bug? It's a feature.
+crash::crash? Boom.
+freeze::freeze? Frozen.
+hang::hang? Stuck.
+leak::leak? Memory leak.
+overflow::overflow? Stack overflow.
+underflow::underflow? Not enough.
+null::null? Nothing.
+undefined::undefined? Not defined.
+NaN::NaN? Not a number.
+infinity::infinity? Beyond.
+-0::-0? Negative zero.
+0::0? Zero.
+1::1? One.
+true::true? Yes.
+false::false? No.
+maybe::maybe? Schrödinger's boolean.
+this::this? Context.
+that::that? Something else.
+self::self? The object itself.
+global::global? Global object.
+window::window? Browser global.
+document::document? The page.
+console::console? Log it.
+log::log? Print.
+info::info? Info.
+warn::warn? Warning.
+error::error? Error.
+table::table? Tabular data.
+time::time? Start timer.
+timeEnd::timeEnd? End timer.
+group::group? Group logs.
+groupEnd::groupEnd? End group.
+count::count? Count.
+assert::assert? Assertion.
+debug::debug? Debugger.
+dir::dir? Inspect.
+trace::trace? Stack trace.
+clear::clear? Clear console.
+alert::alert? Popup.
+confirm::confirm? Yes/no.
+prompt::prompt? Ask user.
+parseInt::parseInt? String to integer.
+parseFloat::parseFloat? String to float.
+Number::Number? Convert to number.
+String::String? Convert to string.
+Boolean::Boolean? Convert to boolean.
+Array::Array? Create array.
+Object::Object? Create object.
+Date::Date? Now.
+Math::Math? Math functions.
+JSON::JSON? Parse/stringify.
+localStorage::localStorage? Persist.
+sessionStorage::sessionStorage? Session.
+cookie::cookie? Yum.
+fetch::fetch? HTTP request.
+ajax::ajax? Old school.
+axios::axios? Promise-based.
+websocket::websocket? Real-time.
+socket.io::socket.io? WebSocket wrapper.
+http::http? Protocol.
+https::https? Secure.
+url::url? Web address.
+uri::uri? Uniform resource identifier.
+dns::dns? Domain name system.
+ip::ip? Internet protocol.
+port::port? Port number.
+localhost::localhost: 127.0.0.1.
+::1::IPv6 localhost.
+127.0.0.1::The loopback.
+0.0.0.0::All interfaces.
+255.255.255.255::Broadcast.
+mac address::mac address? Hardware.
+bluetooth::bluetooth? Wireless.
+wifi::wifi? Wireless internet.
+ethernet::ethernet? Wired.
+5g::5g? Next gen.
+4g::4g? Current.
+3g::3g? Old.
+2g::2g? Ancient.
+edge::edge? Slow.
+lte::lte? Long term evolution.
+gps::gps? Location.
+nfc::nfc? Near field communication.
+rfid::rfid? Radio frequency.
+qr::qr? Quick response.
+barcode::barcode? Scan.
+scan::scan? Read.
+print::print? Output.
+copy::copy? Duplicate.
+paste::paste? Insert.
+cut::cut? Remove.
+undo::undo? Reverse.
+redo::redo? Reverse undo.
+save::save? Persist.
+load::load? Retrieve.
+delete::delete? Remove.
+update::update? Modify.
+create::create? Make new.
+read::read? Access.
+write::write? Change.
+execute::execute? Run.
+compile::compile? Build.
+interpret::interpret? Run directly.
+transpile::transpile? Convert.
+bundle::bundle? Package.
+minify::minify? Squeeze.
+uglify::uglify? Make ugly.
+obfuscate::obfuscate? Hide.
+prettify::prettify? Make pretty.
+format::format? Arrange.
+lint::lint? Check style.
+test::test? Verify.
+debug::debug? Find bugs.
+profile::profile? Measure performance.
+benchmark::benchmark? Compare.
+optimize::optimize? Make faster.
+refactor::refactor? Restructure.
+rewrite::rewrite? Start over.
+document::document? Write docs.
+comment::comment? Explain.
+review::review? Check.
+approve::approve? Green light.
+reject::reject? Red light.
+merge::merge? Combine.
+rebase::rebase? Reapply commits.
+squash::squash? Combine commits.
+commit::commit? Save point.
+push::push? Upload.
+pull::pull? Download.
+fetch::fetch? Get updates.
+clone::clone? Copy repo.
+fork::fork? Copy and modify.
+branch::branch? Diverging line.
+tag::tag? Mark point.
+release::release? Publish.
+deploy::deploy? Put live.
+rollback::rollback? Revert.
+backup::backup? Copy for safety.
+restore::restore? Get back.
+migrate::migrate? Move.
+scale::scale? Grow.
+load balance::load balance? Distribute.
+cache::cache? Store temporarily.
+cdn::cdn? Content delivery network.
+edge::edge? Close to user.
+cloud::cloud? Remote servers.
+on-prem::on-prem? On premises.
+hybrid::hybrid? Mix.
+multi-cloud::multi-cloud? Multiple providers.
+vendor::vendor? Provider.
+lock-in::lock-in? Stuck.
+open source::open source? Free as in speech.
+proprietary::proprietary? Closed source.
+free::free? Free as in beer.
+paid::paid? Costs money.
+subscription::subscription? Monthly fee.
+license::license? Permission.
+agpl::agpl? Copyleft.
+mit::mit? Permissive.
+apache::apache? Another permissive.
+gpl::gpl? Strong copyleft.
+bsd::bsd? Very permissive.
+unlicense::unlicense? Public domain.
+copyright::copyright? All rights reserved.
+trademark::trademark? Brand.
+patent::patent? Invention.
+intellectual property::intellectual property? Ideas.
+privacy::privacy? Personal data.
+security::security? Safe.
+hack::hack? Break in.
+crack::crack? Break.
+exploit::exploit? Use vulnerability.
+vulnerability::vulnerability? Weakness.
+patch::patch? Fix.
+update::update? New version.
+upgrade::upgrade? Major update.
+downgrade::downgrade? Go back.
+install::install? Set up.
+uninstall::uninstall? Remove.
+configure::configure? Settings.
+customize::customize? Personalize.
+extend::extend? Add features.
+plugin::plugin? Add-on.
+extension::extension? Extra.
+module::module? Piece.
+package::package? Collection.
+library::library? Code reuse.
+framework::framework? Structure.
+platform::platform? Base.
+sdk::sdk? Software dev kit.
+api::api? Interface.
+rest::rest? Representational state transfer.
+graphql::graphql? Query language.
+soap::soap? Old web service.
+xml::xml? Extensible markup.
+json::json? JavaScript object notation.
+yaml::yaml? Yet another markup.
+toml::toml? Tom's obvious markup.
+csv::csv? Comma separated.
+tsv::tsv? Tab separated.
+markdown::markdown? Easy formatting.
+html::html? Hypertext markup.
+css::css? Cascading style.
+javascript::javascript? The language.
+typescript::typescript? JavaScript with types.
+python::python? Snake language.
+java::java? Coffee language.
+c::c? The OG.
+c++::c++? C with classes.
+c#::c#? Microsoft's Java.
+go::go? Golang.
+rust::rust? Safe systems.
+swift::swift? Apple's language.
+kotlin::kotlin? Android's language.
+dart::dart? Flutter's language.
+php::php? Hypertext preprocessor.
+ruby::ruby? Gem language.
+perl::perl? Practical extraction.
+lua::lua? Moon language.
+r::r? Statistics.
+matlab::matlab? Matrix laboratory.
+sql::sql? Structured query.
+nosql::nosql? Not only sql.
+graph::graph? Graph database.
+time series::time series? Temporal data.
+blob::blob? Binary large object.
+file::file? Document.
+folder::folder? Directory.
+directory::directory? Folder.
+path::path? Location.
+absolute::absolute? Full path.
+relative::relative? Relative path.
+root::root? Top.
+home::home? User folder.
+tmp::tmp? Temporary.
+var::var? Variable files.
+etc::etc? Configuration.
+usr::usr? User programs.
+bin::bin? Binaries.
+lib::lib? Libraries.
+dev::dev? Devices.
+proc::proc? Processes.
+sys::sys? System.
+boot::boot? Boot files.
+opt::opt? Optional.
+mnt::mnt? Mount.
+media::media? Removable media.
+cdrom::cdrom? CD drive.
+floppy::floppy? Floppy disk.
+disk::disk? Storage.
+partition::partition? Divided disk.
+volume::volume? Logical disk.
+drive::drive? Physical disk.
+ssd::ssd? Solid state.
+hdd::hdd? Hard disk.
+usb::usb? Universal serial bus.
+thunderbolt::thunderbolt? Fast connection.
+hdmi::hdmi? Video/audio.
+displayport::displayport? Display.
+vga::vga? Old video.
+dvi::dvi? Digital video.
+rgb::rgb? Red green blue.
+cmyk::cmyk? Cyan magenta yellow black.
+pixel::pixel? Picture element.
+resolution::resolution? Clarity.
+4k::4k? Ultra HD.
+8k::8k? Super HD.
+hd::hd? High definition.
+sd::sd? Standard definition.
+fps::fps? Frames per second.
+refresh rate::refresh rate? Hz.
+latency::latency? Delay.
+bandwidth::bandwidth? Capacity.
+throughput::throughput? Rate.
+jitter::jitter? Variability.
+packet loss::packet loss? Missing data.
+ping::ping? Network test.
+traceroute::traceroute? Path.
+netstat::netstat? Network stats.
+ifconfig::ifconfig? Interface config.
+ipconfig::ipconfig? IP config (Windows).
+nslookup::nslookup? DNS lookup.
+dig::dig? DNS info.
+curl::curl? Transfer data.
+wget::wget? Web get.
+ssh::ssh? Secure shell.
+scp::scp? Secure copy.
+sftp::sftp? Secure ftp.
+ftp::ftp? File transfer.
+telnet::telnet? Old remote.
+rlogin::rlogin? Remote login.
+rsync::rsync? Remote sync.
+git::git? Version control.
+svn::svn? Subversion.
+mercurial::mercurial? Hg.
+cvs::cvs? Concurrent versions.
+perforce::perforce? Commercial vcs.
+make::make? Build tool.
+cmake::cmake? Cross-platform make.
+ninja::ninja? Fast build.
+gradle::gradle? Build automation.
+maven::maven? Java build.
+ant::ant? Another Java build.
+sbt::sbt? Scala build.
+rake::rake? Ruby make.
+grunt::grunt? JavaScript task runner.
+gulp::gulp? Streaming build.
+webpack::webpack? Module bundler.
+rollup::rollup? Another bundler.
+parcel::parcel? Zero config bundler.
+esbuild::esbuild? Fast bundler.
+vite::vite? Dev server.
+snowpack::snowpack? Unbundled dev.
+browserify::browserify? Bundle for browser.
+requirejs::requirejs? AMD loader.
+systemjs::systemjs? Universal loader.
+jspm::jspm? Package manager.
+bower::bower? Web package manager.
+component::component? Web components.
+yeoman::yeoman? Scaffolding.
+scaffold::scaffold? Generate code.
+boilerplate::boilerplate? Template.
+template::template? Starting point.
+seed::seed? Initial project.
+starter::starter? Beginning.
+kit::kit? Toolkit.
+cli::cli? Command line.
+gui::gui? Graphical interface.
+tui::tui? Text interface.
+ide::ide? Integrated dev environment.
+editor::editor? Code editor.
+vim::vim? Modal editor.
+emacs::emacs? Editor / OS.
+vscode::vscode? Visual studio code.
+sublime::sublime? Text editor.
+atom::atom? Hackable editor.
+notepad++::notepad++? Windows editor.
+xcode::xcode? Apple IDE.
+android studio::android studio? Android IDE.
+intellij::intellij? Java IDE.
+eclipse::eclipse? Java IDE.
+netbeans::netbeans? Java IDE.
+visual studio::visual studio? Microsoft IDE.
+pycharm::pycharm? Python IDE.
+rubymine::rubymine? Ruby IDE.
+phpstorm::phpstorm? PHP IDE.
+webstorm::webstorm? JavaScript IDE.
+datagrip::datagrip? Database IDE.
+clion::clion? C/C++ IDE.
+rider::rider? .NET IDE.
