@@ -1,9 +1,9 @@
 // PackAi – Core AI Engine with Advanced Fuzzy Matching and .PAI Support
-// Fixed: robust file loading, clear console errors, and fallback to simple parsing.
+// Complete working version – all functions defined, no placeholders.
 
 (function() {
     // ---------- Configuration ----------
-    const DIALOGUE_FILES = ['cuss-dialouge.txt', 'dialogue.txt', 'dude.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt']; // fixed dude.txt.txt typo
+    const DIALOGUE_FILES = ['cuss-dialouge.txt', 'dialogue.txt', 'dude.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt'];
     const DB_NAME = 'PackAiDB';
     const DB_VERSION = 1;
     const STORE_NAME = 'learnedQA';
@@ -15,7 +15,7 @@
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
 
-    // ---------- Text Normalization (unchanged) ----------
+    // ---------- Text Normalization ----------
     function normalize(text) {
         return text.toLowerCase()
             .replace(/[.,!?;:'"()\[\]{}<>\/\\|–—―-]/g, ' ')
@@ -23,17 +23,82 @@
             .trim();
     }
 
-    const stopwords = new Set([ /* full list */ ]);
-    function levenshtein(a, b) { /* unchanged */ }
+    // Full stopwords list
+    const stopwords = new Set([
+        'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
+        'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
+        'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which',
+        'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be',
+        'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an',
+        'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for',
+        'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after',
+        'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under',
+        'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all',
+        'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not',
+        'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don',
+        'should', 'now'
+    ]);
+
+    // Levenshtein distance for fuzzy matching
+    function levenshtein(a, b) {
+        if (a.length === 0) return b.length;
+        if (b.length === 0) return a.length;
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i-1) === a.charAt(j-1)) {
+                    matrix[i][j] = matrix[i-1][j-1];
+                } else {
+                    matrix[i][j] = Math.min(matrix[i-1][j-1] + 1,
+                                            Math.min(matrix[i][j-1] + 1,
+                                                     matrix[i-1][j] + 1));
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
+    // Extract keywords (filter stopwords and keep words with length > 2)
     function extractKeywords(text) {
         const words = text.toLowerCase().split(/\s+/);
         return words.filter(w => w.length > 2 && !stopwords.has(w));
     }
 
     // ---------- IndexedDB Setup ----------
-    function openDB() { /* unchanged */ }
-    async function saveLearnedPair(question, answer) { /* unchanged */ }
-    async function loadLearnedPairs() { /* unchanged */ }
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                }
+            };
+        });
+    }
+
+    async function saveLearnedPair(question, answer) {
+        if (!db) return;
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.add({ question, answer, timestamp: Date.now() });
+        return tx.complete;
+    }
+
+    async function loadLearnedPairs() {
+        if (!db) return [];
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
 
     // ---------- Parsers ----------
     function parseTxt(content) {
@@ -77,7 +142,7 @@
         return [...base, ...learnedPairs];
     }
 
-    // ---------- Advanced Matching (unchanged) ----------
+    // ---------- Advanced Matching ----------
     function findBestMatch(userMessage, knowledge) {
         const normalizedUser = normalize(userMessage);
         const userKeywords = extractKeywords(normalizedUser);
@@ -127,7 +192,7 @@
             }
         }
 
-        return bestScore > 20 ? bestMatch : null; // lowered threshold a bit
+        return bestScore > 20 ? bestMatch : null;
     }
 
     async function getAIResponse(userMessage) {
@@ -139,13 +204,82 @@
         return match ? match.answer : "I don't know how to answer that yet. What would be a good response? (Or type 'skip' to ignore)";
     }
 
-    // ---------- Learning & UI (unchanged) ----------
+    // ---------- Learning & UI ----------
     let pendingQuestion = null;
-    async function handleUserMessage(message) { /* unchanged */ }
-    function addMessage(text, sender, isTyping) { /* unchanged */ }
-    function removeTypingIndicator(element) { /* unchanged */ }
 
-    // ---------- API Key Handling (simplified – no JSON, just concatenated text) ----------
+    async function handleUserMessage(message) {
+        const trimmed = message.trim();
+        if (!trimmed) return;
+
+        addMessage(trimmed, 'user');
+        userInput.value = '';
+
+        if (pendingQuestion) {
+            if (trimmed.toLowerCase() === 'skip') {
+                addMessage('Okay, I won\'t learn that this time.', 'ai');
+                pendingQuestion = null;
+                return;
+            } else {
+                await saveLearnedPair(pendingQuestion, trimmed);
+                knowledgeBase.push({ 
+                    question: pendingQuestion, 
+                    answer: trimmed, 
+                    learned: true,
+                    normalized: normalize(pendingQuestion),
+                    keywords: extractKeywords(pendingQuestion.toLowerCase())
+                });
+                addMessage(`Thank you! I've learned that. Next time you ask "${pendingQuestion}", I'll know what to say.`, 'ai');
+                pendingQuestion = null;
+                return;
+            }
+        }
+
+        const typingIndicator = addMessage('', 'ai', true);
+        const response = await getAIResponse(trimmed);
+        removeTypingIndicator(typingIndicator);
+
+        if (response === "I don't know how to answer that yet. What would be a good response? (Or type 'skip' to ignore)") {
+            pendingQuestion = trimmed;
+        }
+
+        addMessage(response, 'ai');
+    }
+
+    function addMessage(text, sender, isTyping = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        if (sender === 'user') {
+            messageDiv.classList.add('user-message');
+        }
+
+        const avatar = document.createElement('div');
+        avatar.classList.add('avatar');
+        avatar.textContent = sender === 'user' ? 'U' : 'P';
+
+        const bubble = document.createElement('div');
+        bubble.classList.add('bubble');
+        bubble.textContent = text;
+
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+
+        if (isTyping) {
+            messageDiv.classList.add('typing');
+            bubble.textContent = '';
+        }
+
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        return messageDiv;
+    }
+
+    function removeTypingIndicator(element) {
+        if (element && element.parentNode) {
+            element.remove();
+        }
+    }
+
+    // ---------- API Key Handling (simplified – no JSON) ----------
     const API_KEY_STORAGE_KEY = 'packai_api_key';
 
     async function getOrCreateAPIKey() {
@@ -168,7 +302,6 @@
                         continue;
                     }
                     const text = await response.text();
-                    // Add a marker to separate files (optional)
                     combinedText += `\n#FILE: ${file}\n` + text + '\n';
                 } catch (err) {
                     console.warn(`Error loading ${file}:`, err);
@@ -201,18 +334,10 @@
 
     // ---------- Parse combined text (with file markers) ----------
     function parseCombinedKnowledge(combinedText) {
-        // Split by file markers to handle each file separately
         const fileBlocks = combinedText.split(/\n#FILE: [^\n]+\n/);
-        // The first block is before the first marker (ignore)
         let baseKnowledge = [];
         for (let i = 1; i < fileBlocks.length; i++) {
             const block = fileBlocks[i];
-            // Determine file type from the marker (we lost the filename, but we can assume .pai if content matches)
-            // Better: we stored filename in marker, but we can't easily extract. For simplicity, we'll try both parsers.
-            // Actually, we can use the marker line to know the file extension.
-            // Let's re-parse the combined text to extract filename and content.
-            // Simpler: we'll just try both parsers on each block and combine results.
-            // This is a hack, but works.
             const txtPairs = parseTxt(block);
             const paiPairs = parsePAI(block);
             baseKnowledge = baseKnowledge.concat(txtPairs, paiPairs);
@@ -251,7 +376,6 @@
             if (e.key === 'Enter') handleUserMessage(userInput.value);
         });
 
-        // If no knowledge, show a warning message
         if (knowledgeBase.length === 0) {
             addMessage('⚠️ No knowledge files loaded. Check console for errors.', 'ai');
         }
