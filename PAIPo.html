@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAIPO · build & share</title>
+    <!-- Ace editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/ace.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* same styles as before – omitted for brevity, but include them */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0c14; color: #e0e0f0; overflow-x: hidden; }
+        .paipo-container { display: flex; flex-direction: column; height: 100vh; }
+        .user-bar { background: #141624; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e44; }
+        .user-info { display: flex; align-items: center; gap: 1rem; }
+        .avatar { width: 40px; height: 40px; border-radius: 40px; background: #2f3a6b; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .main-panel { display: flex; flex: 1; overflow: hidden; }
+        .posts-sidebar { width: 320px; background: #101220; border-right: 2px solid #252a40; overflow-y: auto; padding: 1rem; }
+        .post-card { background: #1c1f30; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #5f6ef0; cursor: pointer; }
+        .post-card:hover { background: #2a2f4a; }
+        .post-card.active { background: #2a3170; border-left-color: #ffb347; }
+        .post-title { font-size: 1.2rem; font-weight: 600; color: #c0d0ff; }
+        .post-meta { font-size: 0.8rem; color: #8f9bb5; }
+        .post-stats { display: flex; gap: 1rem; font-size: 0.9rem; }
+        .content-area { flex: 1; display: flex; flex-direction: column; background: #0e0f1a; }
+        .editor-toolbar { background: #141624; padding: 0.5rem 1rem; display: flex; gap: 1rem; align-items: center; border-bottom: 1px solid #2a2e44; }
+        .editor-toolbar button { background: #252a40; border: none; color: #ccc; padding: 0.5rem 1.2rem; border-radius: 2rem; cursor: pointer; border: 1px solid #40456a; display: inline-flex; align-items: center; gap: 6px; }
+        .editor-toolbar .push-btn { background: #1e4a3a; border-color: #2e8b57; color: #b0ffd0; }
+        .editor-pane { flex: 1; display: flex; }
+        .file-tree { width: 280px; background: #121424; padding: 1rem; overflow-y: auto; border-right: 1px solid #2a2e44; }
+        .tree-node { list-style: none; margin: 4px 0; user-select: none; }
+        .tree-row { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; background: #1c1f32; cursor: pointer; }
+        .tree-row:hover { background: #2a2f50; }
+        .tree-row.selected { background: #37417a; }
+        #ace-editor { flex: 1; height: 100%; font-size: 14px; }
+        .social-panel { background: #141624; border-top: 1px solid #2a2e44; padding: 1rem 2rem; max-height: 300px; overflow-y: auto; }
+        .like-btn { background: transparent; border: 1px solid #5f6ef0; color: #5f6ef0; padding: 8px 20px; border-radius: 30px; cursor: pointer; }
+        .like-btn.liked { background: #5f6ef0; color: white; }
+        .comment-input { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .comment-input input { flex: 1; background: #1a1d2b; border: 1px solid #3a405a; border-radius: 30px; padding: 0.8rem 1.2rem; color: white; }
+        .fork-btn { background: #553c9a; border: none; color: white; padding: 8px 20px; border-radius: 30px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="paipo-container">
+    <div class="user-bar">
+        <div class="user-info">
+            <div class="avatar" id="avatar">?</div>
+            <span id="displayName">Loading...</span>
+        </div>
+        <button id="newPostBtn" class="fork-btn"><i class="fas fa-plus"></i> New PAIPO</button>
+    </div>
+
+    <div class="main-panel">
+        <div class="posts-sidebar" id="postsSidebar">
+            <div style="margin-bottom: 1rem; color: #9aa4c2;">🔥 PAIPOs</div>
+            <div id="postsList"></div>
+        </div>
+
+        <div class="content-area">
+            <div class="editor-toolbar">
+                <button id="newFileBtn"><i class="fas fa-file"></i> file</button>
+                <button id="newFolderBtn"><i class="fas fa-folder-plus"></i> folder</button>
+                <button id="deleteBtn"><i class="fas fa-trash"></i> delete</button>
+                <span style="flex:1"></span>
+                <button id="saveBtn"><i class="fas fa-save"></i> save</button>
+                <button id="pushBtn" class="push-btn"><i class="fab fa-github"></i> push to PAIPO</button>
+            </div>
+            <div class="editor-pane">
+                <div class="file-tree" id="fileTree"></div>
+                <div id="ace-editor"></div>
+            </div>
+            <div class="social-panel" id="socialPanel">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="like-btn" id="likeBtn"><i class="far fa-heart"></i> <span id="likeCount">0</span></button>
+                    <button class="fork-btn" id="forkBtn"><i class="fas fa-code-branch"></i> fork</button>
+                </div>
+                <div class="comments-section" id="commentsSection"></div>
+                <div class="comment-input">
+                    <input type="text" id="commentInput" placeholder="write a comment...">
+                    <button id="postCommentBtn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- STATE ----------
+        let anonymousId = localStorage.getItem('paipo_anon_id');
+        let displayName = localStorage.getItem('paipo_display_name');
+        let currentPostId = null;
+        let currentPost = null;
+        let posts = [];
+        let fileSystem = []; // array of { path, content }
+        let selectedFileIndex = 0;
+        let aceEditor = null;
+
+        // ---------- UI Elements ----------
+        const avatar = document.getElementById('avatar');
+        const displayNameSpan = document.getElementById('displayName');
+        const postsListDiv = document.getElementById('postsList');
+        const fileTreeDiv = document.getElementById('fileTree');
+        const likeBtn = document.getElementById('likeBtn');
+        const likeCountSpan = document.getElementById('likeCount');
+        const commentsSection = document.getElementById('commentsSection');
+        const commentInput = document.getElementById('commentInput');
+        const postCommentBtn = document.getElementById('postCommentBtn');
+        const forkBtn = document.getElementById('forkBtn');
+        const newPostBtn = document.getElementById('newPostBtn');
+        const newFileBtn = document.getElementById('newFileBtn');
+        const newFolderBtn = document.getElementById('newFolderBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const pushBtn = document.getElementById('pushBtn');
+
+        // ---------- Helper: call API ----------
+        async function callAPI(action, payload = {}) {
+            const response = await fetch('/.netlify/functions/paipo-api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, ...payload })
+            });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'API error');
+            }
+            return await response.json();
+        }
+
+        // ---------- User initialization ----------
+        async function initUser() {
+            if (!anonymousId) {
+                anonymousId = crypto.randomUUID();
+                localStorage.setItem('paipo_anon_id', anonymousId);
+                const adj = ['Anonymous','Mysterious','Silent','Wandering','Curious','Brave','Clever','Gentle','Fierce','Happy'];
+                const noun = ['Penguin','Koala','Fox','Wolf','Eagle','Badger','Otter','Raccoon','Sloth','Hedgehog'];
+                const num = Math.floor(Math.random()*9000+1000);
+                displayName = adj[Math.floor(Math.random()*adj.length)] + ' ' + noun[Math.floor(Math.random()*noun.length)] + ' #' + num;
+                localStorage.setItem('paipo_display_name', displayName);
+            } else {
+                displayName = localStorage.getItem('paipo_display_name') || 'Anonymous';
+            }
+            avatar.innerText = displayName.charAt(0);
+            displayNameSpan.innerText = displayName;
+
+            // Ensure user exists in DB (call API)
+            await callAPI('ensureUser', { anonymousId, displayName });
+        }
+
+        // ---------- Load posts ----------
+        async function loadPosts() {
+            const data = await callAPI('getPosts');
+            posts = data.posts;
+            renderPosts();
+        }
+
+        function renderPosts() {
+            postsListDiv.innerHTML = '';
+            posts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = `post-card ${currentPostId === post.id ? 'active' : ''}`;
+                card.dataset.id = post.id;
+                card.innerHTML = `
+                    <div class="post-title">${post.title}</div>
+                    <div class="post-meta">${new Date(post.created_at).toLocaleDateString()}</div>
+                    <div class="post-stats">
+                        <span><i class="far fa-heart"></i> ${post.likes_count}</span>
+                        <span><i class="far fa-comment"></i> ${post.comments_count}</span>
+                        <span><i class="fas fa-code-branch"></i> ${post.forks_count}</span>
+                    </div>
+                `;
+                card.addEventListener('click', () => selectPost(post.id));
+                postsListDiv.appendChild(card);
+            });
+        }
+
+        // ---------- Select post ----------
+        async function selectPost(postId) {
+            currentPostId = postId;
+            currentPost = posts.find(p => p.id === postId);
+            renderPosts(); // update active
+
+            // Load files from GitHub via API
+            const data = await callAPI('getPostFiles', { postId });
+            fileSystem = data.files || [];
+            renderFileTree();
+            if (fileSystem.length > 0) selectFile(0);
+            else aceEditor.session.setValue('');
+
+            // Load social data
+            loadLikes();
+            loadComments();
+        }
+
+        // ---------- File tree ----------
+        function renderFileTree() {
+            fileTreeDiv.innerHTML = '';
+            fileSystem.forEach((file, index) => {
+                const row = document.createElement('div');
+                row.className = `tree-row ${selectedFileIndex === index ? 'selected' : ''}`;
+                row.dataset.index = index;
+                row.innerHTML = `<i class="fas fa-file"></i> ${file.path}`;
+                row.addEventListener('click', () => selectFile(index));
+                fileTreeDiv.appendChild(row);
+            });
+        }
+
+        function selectFile(index) {
+            selectedFileIndex = index;
+            const file = fileSystem[index];
+            aceEditor.session.setValue(file.content || '');
+            const ext = file.path.split('.').pop();
+            let mode = 'ace/mode/text';
+            if (ext === 'html') mode = 'ace/mode/html';
+            else if (ext === 'css') mode = 'ace/mode/css';
+            else if (ext === 'js') mode = 'ace/mode/javascript';
+            else if (ext === 'json') mode = 'ace/mode/json';
+            aceEditor.session.setMode(mode);
+            renderFileTree(); // update selected style
+        }
+
+        // ---------- Save file ----------
+        function saveCurrentFile() {
+            if (selectedFileIndex !== undefined && fileSystem[selectedFileIndex]) {
+                fileSystem[selectedFileIndex].content = aceEditor.session.getValue();
+            }
+        }
+
+        // ---------- Push files ----------
+        async function pushFiles() {
+            if (!currentPostId) return alert('Select a post first');
+            saveCurrentFile();
+            await callAPI('pushFiles', { postId: currentPostId, files: fileSystem });
+            alert('Files pushed!');
+        }
+
+        // ---------- Likes ----------
+        async function loadLikes() {
+            if (!currentPostId) return;
+            const data = await callAPI('getLikes', { postId: currentPostId });
+            likeCountSpan.innerText = data.count;
+            // Check if current user liked
+            const userLiked = data.likes.some(l => l.anonymous_id === anonymousId);
+            if (userLiked) likeBtn.classList.add('liked');
+            else likeBtn.classList.remove('liked');
+        }
+
+        async function toggleLike() {
+            if (!currentPostId) return;
+            const liked = likeBtn.classList.contains('liked');
+            if (liked) {
+                await callAPI('unlikePost', { postId: currentPostId, anonymousId });
+                likeBtn.classList.remove('liked');
+            } else {
+                await callAPI('likePost', { postId: currentPostId, anonymousId });
+                likeBtn.classList.add('liked');
+            }
+            loadLikes();
+        }
+
+        // ---------- Comments ----------
+        async function loadComments() {
+            if (!currentPostId) return;
+            const data = await callAPI('getComments', { postId: currentPostId });
+            commentsSection.innerHTML = '';
+            data.comments.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'comment';
+                div.innerHTML = `
+                    <div class="comment-meta">${c.user?.display_name || 'Anonymous'}</div>
+                    <div>${c.content}</div>
+                `;
+                commentsSection.appendChild(div);
+            });
+        }
+
+        async function postComment() {
+            const text = commentInput.value.trim();
+            if (!text || !currentPostId) return;
+            await callAPI('addComment', { postId: currentPostId, anonymousId, content: text });
+            commentInput.value = '';
+            loadComments();
+            loadPosts(); // refresh counts
+        }
+
+        // ---------- Fork ----------
+        async function forkPost() {
+            if (!currentPost) return;
+            const title = prompt('Enter title for your forked PAIPO:', currentPost.title + ' (fork)');
+            if (!title) return;
+            await callAPI('forkPost', { originalPostId: currentPostId, anonymousId, newTitle: title });
+            alert('Fork created!');
+            loadPosts();
+        }
+
+        // ---------- New post ----------
+        async function newPost() {
+            const title = prompt('Enter PAIPO title:');
+            if (!title) return;
+            const data = await callAPI('createPost', { anonymousId, title, description: '' });
+            alert('Post created!');
+            loadPosts();
+            // Optionally select the new post
+            setTimeout(() => selectPost(data.post.id), 500);
+        }
+
+        // ---------- File management (simple) ----------
+        function newFile() {
+            const name = prompt('File name (with extension):');
+            if (!name) return;
+            fileSystem.push({ path: name, content: '' });
+            renderFileTree();
+        }
+
+        function deleteSelected() {
+            if (selectedFileIndex !== undefined && fileSystem.length > 0) {
+                fileSystem.splice(selectedFileIndex, 1);
+                renderFileTree();
+                if (fileSystem.length > 0) selectFile(0);
+                else aceEditor.session.setValue('');
+            }
+        }
+
+        // ---------- Init Ace ----------
+        function initAce() {
+            aceEditor = ace.edit('ace-editor');
+            aceEditor.setTheme('ace/theme/tomorrow_night');
+            aceEditor.session.setMode('ace/mode/text');
+            aceEditor.setOptions({ fontSize: '14px', showPrintMargin: false });
+            aceEditor.setReadOnly(false);
+            aceEditor.session.setValue('// select a file');
+        }
+
+        // ---------- Event listeners ----------
+        likeBtn.addEventListener('click', toggleLike);
+        postCommentBtn.addEventListener('click', postComment);
+        forkBtn.addEventListener('click', forkPost);
+        newPostBtn.addEventListener('click', newPost);
+        newFileBtn.addEventListener('click', newFile);
+        newFolderBtn.addEventListener('click', () => alert('Folders not implemented'));
+        deleteBtn.addEventListener('click', deleteSelected);
+        saveBtn.addEventListener('click', saveCurrentFile);
+        pushBtn.addEventListener('click', pushFiles);
+
+        // ---------- Start ----------
+        (async function() {
+            initAce();
+            await initUser();
+            await loadPosts();
+        })();
+    })();
+</script>
+</body>
+</html>
