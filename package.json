@@ -1,0 +1,15 @@
+{
+  "name": "packgames-studio",
+  "version": "1.0.0",
+  "description": "PackGames studio backend functions for GitHub and Netlify API",
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "node-fetch": "^2.6.9"
+  },
+  "scripts": {
+    "dev": "netlify functions:serve"
+  },
+  "keywords": ["netlify", "functions", "github", "api"],
+  "author": "Your Name",
+  "license": "MIT"
+}
