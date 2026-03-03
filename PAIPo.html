@@ -9,69 +9,322 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* same styles as before – omitted for brevity, but include them */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #0a0c14; color: #e0e0f0; overflow-x: hidden; }
-        .paipo-container { display: flex; flex-direction: column; height: 100vh; }
-        .user-bar { background: #141624; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e44; }
-        .user-info { display: flex; align-items: center; gap: 1rem; }
-        .avatar { width: 40px; height: 40px; border-radius: 40px; background: #2f3a6b; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .main-panel { display: flex; flex: 1; overflow: hidden; }
-        .posts-sidebar { width: 320px; background: #101220; border-right: 2px solid #252a40; overflow-y: auto; padding: 1rem; }
-        .post-card { background: #1c1f30; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #5f6ef0; cursor: pointer; }
-        .post-card:hover { background: #2a2f4a; }
-        .post-card.active { background: #2a3170; border-left-color: #ffb347; }
-        .post-title { font-size: 1.2rem; font-weight: 600; color: #c0d0ff; }
-        .post-meta { font-size: 0.8rem; color: #8f9bb5; }
-        .post-stats { display: flex; gap: 1rem; font-size: 0.9rem; }
-        .content-area { flex: 1; display: flex; flex-direction: column; background: #0e0f1a; }
-        .editor-toolbar { background: #141624; padding: 0.5rem 1rem; display: flex; gap: 1rem; align-items: center; border-bottom: 1px solid #2a2e44; }
-        .editor-toolbar button { background: #252a40; border: none; color: #ccc; padding: 0.5rem 1.2rem; border-radius: 2rem; cursor: pointer; border: 1px solid #40456a; display: inline-flex; align-items: center; gap: 6px; }
-        .editor-toolbar .push-btn { background: #1e4a3a; border-color: #2e8b57; color: #b0ffd0; }
-        .editor-pane { flex: 1; display: flex; }
-        .file-tree { width: 280px; background: #121424; padding: 1rem; overflow-y: auto; border-right: 1px solid #2a2e44; }
-        .tree-node { list-style: none; margin: 4px 0; user-select: none; }
-        .tree-row { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; background: #1c1f32; cursor: pointer; }
-        .tree-row:hover { background: #2a2f50; }
-        .tree-row.selected { background: #37417a; }
-        #ace-editor { flex: 1; height: 100%; font-size: 14px; }
-        .social-panel { background: #141624; border-top: 1px solid #2a2e44; padding: 1rem 2rem; max-height: 300px; overflow-y: auto; }
-        .like-btn { background: transparent; border: 1px solid #5f6ef0; color: #5f6ef0; padding: 8px 20px; border-radius: 30px; cursor: pointer; }
-        .like-btn.liked { background: #5f6ef0; color: white; }
-        .comment-input { display: flex; gap: 0.5rem; margin-top: 1rem; }
-        .comment-input input { flex: 1; background: #1a1d2b; border: 1px solid #3a405a; border-radius: 30px; padding: 0.8rem 1.2rem; color: white; }
-        .fork-btn { background: #553c9a; border: none; color: white; padding: 8px 20px; border-radius: 30px; cursor: pointer; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #1e1e2f;
+            height: 100vh;
+            overflow: hidden;
+            color: #ddd;
+        }
+        /* main studio */
+        #studio {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .user-bar {
+            background: #161625;
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2d2d44;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 40px;
+            background: #2f3a6b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .new-post-btn {
+            background: #2d4a3b;
+            border: none;
+            color: #b0ffd0;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            border: 1px solid #2e8b57;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .main-panel {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .posts-sidebar {
+            width: 320px;
+            background: #1c1c2e;
+            border-right: 2px solid #2a2a42;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .post-card {
+            background: #252538;
+            border-radius: 16px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #7f6aee;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .post-card:hover {
+            background: #2f2f4a;
+        }
+        .post-card.active {
+            background: #3e3e64;
+            border-left-color: #ffb347;
+        }
+        .post-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #c0d0ff;
+        }
+        .post-meta {
+            font-size: 0.8rem;
+            color: #8a8aaa;
+            margin: 0.3rem 0;
+        }
+        .post-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e2a;
+        }
+        .toolbar {
+            background: #161625;
+            padding: 0.5rem 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            border-bottom: 1px solid #2d2d44;
+        }
+        .toolbar button {
+            background: #2d2d44;
+            border: none;
+            color: #ccc;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid #40405c;
+        }
+        .toolbar button:hover {
+            background: #3d3d60;
+            color: white;
+        }
+        .toolbar .spacer {
+            flex: 1;
+        }
+        .toolbar .push-btn {
+            background: #2d4a3b;
+            border-color: #2e8b57;
+            color: #b0ffd0;
+        }
+        .editor-pane {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .file-tree {
+            width: 320px;
+            background: #1c1c2e;
+            border-right: 2px solid #2a2a42;
+            padding: 1rem 0.5rem 1rem 1rem;
+            overflow-y: auto;
+            user-select: none;
+            font-size: 0.95rem;
+        }
+        .tree-root {
+            list-style: none;
+            padding-left: 0.5rem;
+        }
+        .tree-node {
+            list-style: none;
+            margin: 2px 0;
+            white-space: nowrap;
+        }
+        .tree-node .item-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px 4px 4px;
+            border-radius: 8px;
+            cursor: default;
+            background: #252538;
+            margin: 2px 0;
+            border: 1px solid transparent;
+            transition: background 0.1s;
+        }
+        .tree-node .item-row:hover {
+            background: #2f2f4a;
+            border-color: #4f4f7a;
+        }
+        .tree-node .item-row.selected {
+            background: #3e3e64;
+            border-left: 4px solid #7f6aee;
+        }
+        .item-row.dragover {
+            background: #4a4a7a !important;
+            border: 1px dashed #b8a9ff;
+        }
+        .item-row i {
+            width: 20px;
+            color: #b0b0da;
+        }
+        .item-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .folder-children {
+            list-style: none;
+            padding-left: 24px;
+            margin-left: 8px;
+            border-left: 1px dotted #3a3a5a;
+        }
+        .empty-folder {
+            color: #6a6a8a;
+            font-style: italic;
+            padding-left: 28px;
+            font-size: 0.85rem;
+        }
+        #editor {
+            flex: 1;
+            height: 100%;
+            font-size: 14px;
+        }
+        .social-panel {
+            background: #161625;
+            border-top: 1px solid #2d2d44;
+            padding: 1rem 2rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .like-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .like-btn {
+            background: transparent;
+            border: 1px solid #7f6aee;
+            color: #7f6aee;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        .like-btn.liked {
+            background: #7f6aee;
+            color: white;
+        }
+        .fork-btn {
+            background: #553c9a;
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        .comments-section {
+            margin-top: 1rem;
+        }
+        .comment {
+            background: #252538;
+            border-radius: 12px;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+        .comment-meta {
+            font-size: 0.8rem;
+            color: #8a8aaa;
+        }
+        .comment-input {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .comment-input input {
+            flex: 1;
+            background: #1e1e2a;
+            border: 1px solid #3a3a5a;
+            border-radius: 30px;
+            padding: 0.8rem 1.2rem;
+            color: white;
+        }
+        .comment-input button {
+            background: #7f6aee;
+            border: none;
+            border-radius: 30px;
+            padding: 0 1.5rem;
+            color: white;
+        }
+        .dragging-ghost {
+            background: #4c3c8c;
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 8px 16px black;
+        }
+        i.fa-folder { color: #7a95e0; }
+        i.fa-file { color: #b0b0d0; }
     </style>
 </head>
 <body>
-<div class="paipo-container">
+<div id="studio">
     <div class="user-bar">
         <div class="user-info">
             <div class="avatar" id="avatar">?</div>
             <span id="displayName">Loading...</span>
         </div>
-        <button id="newPostBtn" class="fork-btn"><i class="fas fa-plus"></i> New PAIPO</button>
+        <button id="newPostBtn" class="new-post-btn"><i class="fas fa-plus"></i> New PAIPO</button>
     </div>
 
     <div class="main-panel">
+        <!-- posts sidebar -->
         <div class="posts-sidebar" id="postsSidebar">
-            <div style="margin-bottom: 1rem; color: #9aa4c2;">🔥 PAIPOs</div>
+            <div style="margin-bottom: 1rem; color: #8a8aaa;">🔥 PAIPOs</div>
             <div id="postsList"></div>
         </div>
 
+        <!-- content area -->
         <div class="content-area">
-            <div class="editor-toolbar">
-                <button id="newFileBtn"><i class="fas fa-file"></i> file</button>
-                <button id="newFolderBtn"><i class="fas fa-folder-plus"></i> folder</button>
-                <button id="deleteBtn"><i class="fas fa-trash"></i> delete</button>
-                <span style="flex:1"></span>
+            <div class="toolbar">
+                <button id="newFileBtn"><i class="fas fa-file"></i> new file</button>
+                <button id="newFolderBtn"><i class="fas fa-folder-plus"></i> new folder</button>
+                <button id="deleteBtn"><i class="fas fa-trash-alt"></i> delete</button>
+                <span class="spacer"></span>
                 <button id="saveBtn"><i class="fas fa-save"></i> save</button>
                 <button id="pushBtn" class="push-btn"><i class="fab fa-github"></i> push to PAIPO</button>
             </div>
             <div class="editor-pane">
-                <div class="file-tree" id="fileTree"></div>
-                <div id="ace-editor"></div>
+                <div class="file-tree" id="fileTreeContainer"></div>
+                <div id="editor"></div>
             </div>
+            <!-- social panel -->
             <div class="social-panel" id="socialPanel">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <button class="like-btn" id="likeBtn"><i class="far fa-heart"></i> <span id="likeCount">0</span></button>
@@ -88,38 +341,51 @@
 </div>
 
 <script>
-    (function() {
+    (function(){
+        // ---------- CONFIG ----------
+        const API_ENDPOINT = '/.netlify/functions/paipo-api';
+
         // ---------- STATE ----------
         let anonymousId = localStorage.getItem('paipo_anon_id');
         let displayName = localStorage.getItem('paipo_display_name');
         let currentPostId = null;
-        let currentPost = null;
         let posts = [];
-        let fileSystem = []; // array of { path, content }
-        let selectedFileIndex = 0;
+        let items = []; // file tree items (same format as original)
+        let selectedFileId = null;
         let aceEditor = null;
 
-        // ---------- UI Elements ----------
-        const avatar = document.getElementById('avatar');
-        const displayNameSpan = document.getElementById('displayName');
-        const postsListDiv = document.getElementById('postsList');
-        const fileTreeDiv = document.getElementById('fileTree');
-        const likeBtn = document.getElementById('likeBtn');
-        const likeCountSpan = document.getElementById('likeCount');
-        const commentsSection = document.getElementById('commentsSection');
-        const commentInput = document.getElementById('commentInput');
-        const postCommentBtn = document.getElementById('postCommentBtn');
-        const forkBtn = document.getElementById('forkBtn');
-        const newPostBtn = document.getElementById('newPostBtn');
-        const newFileBtn = document.getElementById('newFileBtn');
-        const newFolderBtn = document.getElementById('newFolderBtn');
-        const deleteBtn = document.getElementById('deleteBtn');
-        const saveBtn = document.getElementById('saveBtn');
-        const pushBtn = document.getElementById('pushBtn');
+        // Root folder id
+        const ROOT_ID = 'root';
 
-        // ---------- Helper: call API ----------
+        // ---------- UTILS ----------
+        function genId() { return Date.now() + '-' + Math.random().toString(36).substring(2, 9); }
+
+        function getItem(id) { return items.find(it => it.id === id); }
+        function getChildren(parentId) { return items.filter(it => it.parent === parentId).sort((a,b) => a.name.localeCompare(b.name)); }
+
+        // Check if descendant (for drag safety)
+        function isDescendant(descendantId, ancestorId) {
+            if (descendantId === ancestorId) return true;
+            let item = getItem(descendantId);
+            while (item && item.parent) {
+                if (item.parent === ancestorId) return true;
+                item = getItem(item.parent);
+            }
+            return false;
+        }
+
+        // Build full path for an item (for pushing to GitHub)
+        function buildPath(itemId) {
+            const item = getItem(itemId);
+            if (!item) return '';
+            if (item.id === ROOT_ID) return '';
+            const parentPath = buildPath(item.parent);
+            return parentPath ? `${parentPath}/${item.name}` : item.name;
+        }
+
+        // ---------- API CALL ----------
         async function callAPI(action, payload = {}) {
-            const response = await fetch('/.netlify/functions/paipo-api', {
+            const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action, ...payload })
@@ -131,7 +397,7 @@
             return await response.json();
         }
 
-        // ---------- User initialization ----------
+        // ---------- USER INIT ----------
         async function initUser() {
             if (!anonymousId) {
                 anonymousId = crypto.randomUUID();
@@ -144,14 +410,14 @@
             } else {
                 displayName = localStorage.getItem('paipo_display_name') || 'Anonymous';
             }
-            avatar.innerText = displayName.charAt(0);
-            displayNameSpan.innerText = displayName;
+            document.getElementById('avatar').innerText = displayName.charAt(0);
+            document.getElementById('displayName').innerText = displayName;
 
-            // Ensure user exists in DB (call API)
+            // Ensure user in DB
             await callAPI('ensureUser', { anonymousId, displayName });
         }
 
-        // ---------- Load posts ----------
+        // ---------- LOAD POSTS ----------
         async function loadPosts() {
             const data = await callAPI('getPosts');
             posts = data.posts;
@@ -159,7 +425,8 @@
         }
 
         function renderPosts() {
-            postsListDiv.innerHTML = '';
+            const container = document.getElementById('postsList');
+            container.innerHTML = '';
             posts.forEach(post => {
                 const card = document.createElement('div');
                 card.className = `post-card ${currentPostId === post.id ? 'active' : ''}`;
@@ -174,99 +441,357 @@
                     </div>
                 `;
                 card.addEventListener('click', () => selectPost(post.id));
-                postsListDiv.appendChild(card);
+                container.appendChild(card);
             });
         }
 
-        // ---------- Select post ----------
+        // ---------- SELECT POST ----------
         async function selectPost(postId) {
             currentPostId = postId;
-            currentPost = posts.find(p => p.id === postId);
             renderPosts(); // update active
 
             // Load files from GitHub via API
             const data = await callAPI('getPostFiles', { postId });
-            fileSystem = data.files || [];
-            renderFileTree();
-            if (fileSystem.length > 0) selectFile(0);
-            else aceEditor.session.setValue('');
+            buildItemsFromFiles(data.files || []);
+            renderTree();
+            // Select first file if any
+            const firstFile = items.find(it => it.type === 'file' && it.id !== ROOT_ID);
+            if (firstFile) selectFile(firstFile.id);
 
             // Load social data
             loadLikes();
             loadComments();
         }
 
-        // ---------- File tree ----------
-        function renderFileTree() {
-            fileTreeDiv.innerHTML = '';
-            fileSystem.forEach((file, index) => {
-                const row = document.createElement('div');
-                row.className = `tree-row ${selectedFileIndex === index ? 'selected' : ''}`;
-                row.dataset.index = index;
-                row.innerHTML = `<i class="fas fa-file"></i> ${file.path}`;
-                row.addEventListener('click', () => selectFile(index));
-                fileTreeDiv.appendChild(row);
+        // Build items array from flat file list (paths like 'folder/file.js')
+        function buildItemsFromFiles(files) {
+            items = [{ id: ROOT_ID, name: 'root', type: 'folder', parent: null, content: null }];
+            files.forEach(file => {
+                const parts = file.path.split('/');
+                let currentParent = ROOT_ID;
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    const isFile = i === parts.length - 1;
+                    const existing = items.find(it => it.parent === currentParent && it.name === part);
+                    if (existing) {
+                        currentParent = existing.id;
+                        if (isFile) existing.content = file.content; // update content if already exists
+                    } else {
+                        const newId = genId();
+                        items.push({
+                            id: newId,
+                            name: part,
+                            type: isFile ? 'file' : 'folder',
+                            parent: currentParent,
+                            content: isFile ? file.content : null
+                        });
+                        currentParent = newId;
+                    }
+                }
             });
         }
 
-        function selectFile(index) {
-            selectedFileIndex = index;
-            const file = fileSystem[index];
-            aceEditor.session.setValue(file.content || '');
-            const ext = file.path.split('.').pop();
-            let mode = 'ace/mode/text';
-            if (ext === 'html') mode = 'ace/mode/html';
-            else if (ext === 'css') mode = 'ace/mode/css';
-            else if (ext === 'js') mode = 'ace/mode/javascript';
-            else if (ext === 'json') mode = 'ace/mode/json';
-            aceEditor.session.setMode(mode);
-            renderFileTree(); // update selected style
+        // ---------- RENDER TREE (identical to original) ----------
+        function renderTree() {
+            const container = document.getElementById('fileTreeContainer');
+            container.innerHTML = ''; 
+            const rootFolder = getItem(ROOT_ID);
+            if (!rootFolder) return;
+            const rootUl = document.createElement('ul');
+            rootUl.className = 'tree-root';
+            renderNode(ROOT_ID, rootUl, 0);
+            container.appendChild(rootUl);
+            attachDragDropListeners();
         }
 
-        // ---------- Save file ----------
-        function saveCurrentFile() {
-            if (selectedFileIndex !== undefined && fileSystem[selectedFileIndex]) {
-                fileSystem[selectedFileIndex].content = aceEditor.session.getValue();
+        function renderNode(parentId, parentUl, depth) {
+            const children = getChildren(parentId);
+            if (children.length === 0) return;
+            for (let child of children) {
+                const li = document.createElement('li');
+                li.className = 'tree-node';
+                li.dataset.id = child.id;
+                li.dataset.type = child.type;
+                li.setAttribute('draggable', child.type === 'file' || child.type === 'folder');
+                
+                const row = document.createElement('div');
+                row.className = `item-row ${selectedFileId === child.id ? 'selected' : ''}`;
+                row.dataset.id = child.id;
+                
+                const icon = document.createElement('i');
+                icon.className = child.type === 'folder' ? 'fas fa-folder' : 'fas fa-file-code';
+                row.appendChild(icon);
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'item-name';
+                nameSpan.textContent = child.name;
+                row.appendChild(nameSpan);
+                
+                li.appendChild(row);
+                
+                if (child.type === 'folder') {
+                    const childContainer = document.createElement('ul');
+                    childContainer.className = 'folder-children';
+                    renderNode(child.id, childContainer, depth+1);
+                    if (getChildren(child.id).length === 0) {
+                        const emptyLi = document.createElement('li');
+                        emptyLi.className = 'empty-folder';
+                        emptyLi.textContent = '⌀ empty';
+                        childContainer.appendChild(emptyLi);
+                    }
+                    li.appendChild(childContainer);
+                }
+                
+                parentUl.appendChild(li);
             }
         }
 
-        // ---------- Push files ----------
+        // ---------- DRAG AND DROP (identical to original) ----------
+        let draggedId = null;
+        let currentDragoverFolderRow = null;
+
+        function findFolderNode(element) {
+            let current = element.closest('.tree-node');
+            while (current) {
+                if (current.dataset.type === 'folder') {
+                    return current;
+                }
+                current = current.parentElement?.closest('.tree-node');
+            }
+            return null;
+        }
+
+        function attachDragDropListeners() {
+            const treeContainer = document.getElementById('fileTreeContainer');
+            
+            treeContainer.ondragover = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                const folderNode = findFolderNode(e.target);
+                if (!folderNode) {
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                        currentDragoverFolderRow = null;
+                    }
+                    return;
+                }
+                
+                const folderRow = folderNode.querySelector('.item-row');
+                if (folderRow && folderRow !== currentDragoverFolderRow) {
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                    }
+                    folderRow.classList.add('dragover');
+                    currentDragoverFolderRow = folderRow;
+                }
+            };
+            
+            treeContainer.ondragleave = (e) => {
+                if (currentDragoverFolderRow) {
+                    currentDragoverFolderRow.classList.remove('dragover');
+                    currentDragoverFolderRow = null;
+                }
+            };
+            
+            treeContainer.ondrop = (e) => {
+                e.preventDefault();
+                if (currentDragoverFolderRow) {
+                    currentDragoverFolderRow.classList.remove('dragover');
+                    currentDragoverFolderRow = null;
+                }
+                
+                const folderNode = findFolderNode(e.target);
+                const targetId = folderNode ? folderNode.dataset.id : ROOT_ID;
+                const targetItem = getItem(targetId);
+                if (targetItem && targetItem.type !== 'folder') return;
+                
+                const dragged = draggedId || e.dataTransfer.getData('text/plain');
+                if (!dragged) return;
+                
+                if (dragged === targetId || isDescendant(targetId, dragged)) {
+                    alert('Cannot move a folder into itself or its subfolder.');
+                    return;
+                }
+                const draggedItem = getItem(dragged);
+                if (!draggedItem) return;
+                
+                draggedItem.parent = targetId;
+                renderTree();
+            };
+            
+            const allRows = document.querySelectorAll('.item-row');
+            allRows.forEach(row => {
+                const li = row.closest('.tree-node');
+                if (!li) return;
+                const id = li.dataset.id;
+                const type = li.dataset.type;
+                
+                row.setAttribute('draggable', type === 'file' || type === 'folder');
+                row.ondragstart = (e) => {
+                    if (type !== 'file' && type !== 'folder') {
+                        e.preventDefault();
+                        return;
+                    }
+                    draggedId = id;
+                    e.dataTransfer.setData('text/plain', id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    const ghost = document.createElement('span');
+                    ghost.className = 'dragging-ghost';
+                    ghost.textContent = getItem(id)?.name || 'item';
+                    document.body.appendChild(ghost);
+                    e.dataTransfer.setDragImage(ghost, 20, 10);
+                    setTimeout(() => document.body.removeChild(ghost), 0);
+                };
+                row.ondragend = () => { 
+                    draggedId = null; 
+                    if (currentDragoverFolderRow) {
+                        currentDragoverFolderRow.classList.remove('dragover');
+                        currentDragoverFolderRow = null;
+                    }
+                };
+            });
+        }
+
+        // ---------- ACE EDITOR ----------
+        function initAce() {
+            aceEditor = ace.edit('editor');
+            aceEditor.setTheme('ace/theme/tomorrow_night');
+            aceEditor.session.setMode('ace/mode/text');
+            aceEditor.setOptions({
+                fontSize: '14px',
+                showPrintMargin: false,
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true
+            });
+            aceEditor.setReadOnly(false);
+            aceEditor.session.setValue('// select a file');
+        }
+
+        function selectFile(id) {
+            const file = getItem(id);
+            if (!file || file.type !== 'file') return;
+            selectedFileId = id;
+            aceEditor.session.setValue(file.content || '');
+            const ext = file.name.split('.').pop();
+            let mode = 'ace/mode/text';
+            if (ext === 'html' || ext === 'htm') mode = 'ace/mode/html';
+            else if (ext === 'css') mode = 'ace/mode/css';
+            else if (ext === 'js') mode = 'ace/mode/javascript';
+            else if (ext === 'json') mode = 'ace/mode/json';
+            else if (ext === 'md') mode = 'ace/mode/markdown';
+            aceEditor.session.setMode(mode);
+            renderTree(); // update selected style
+        }
+
+        function saveCurrentFile() {
+            if (!selectedFileId) { alert('No file selected'); return; }
+            const file = getItem(selectedFileId);
+            if (file && file.type === 'file') {
+                file.content = aceEditor.session.getValue();
+                renderTree(); 
+            }
+        }
+
+        // ---------- FILE OPERATIONS ----------
+        function newFile() {
+            let parentId = ROOT_ID;
+            if (selectedFileId) {
+                const sel = getItem(selectedFileId);
+                if (sel.type === 'folder') parentId = sel.id;
+                else parentId = sel.parent;
+            }
+            const name = prompt('Enter file name (with extension):', 'newfile.js');
+            if (!name) return;
+            const newId = genId();
+            items.push({
+                id: newId,
+                name: name,
+                type: 'file',
+                parent: parentId,
+                content: '// new file\n'
+            });
+            renderTree();
+            selectFile(newId);
+        }
+
+        function newFolder() {
+            let parentId = ROOT_ID;
+            if (selectedFileId) {
+                const sel = getItem(selectedFileId);
+                if (sel.type === 'folder') parentId = sel.id;
+                else parentId = sel.parent;
+            }
+            const name = prompt('Folder name:', 'new folder');
+            if (!name) return;
+            items.push({
+                id: genId(),
+                name: name,
+                type: 'folder',
+                parent: parentId,
+                content: null
+            });
+            renderTree();
+        }
+
+        function deleteSelected() {
+            if (!selectedFileId) { alert('select a file/folder to delete'); return; }
+            if (selectedFileId === ROOT_ID) { alert('cannot delete root'); return; }
+            if (!confirm('Permanently delete? This will also delete all children.')) return;
+            const idsToDelete = new Set();
+            function collect(id) {
+                idsToDelete.add(id);
+                getChildren(id).forEach(child => collect(child.id));
+            }
+            collect(selectedFileId);
+            items = items.filter(it => !idsToDelete.has(it.id));
+            selectedFileId = null;
+            aceEditor.session.setValue('// item deleted');
+            renderTree();
+        }
+
+        // ---------- PUSH FILES ----------
         async function pushFiles() {
             if (!currentPostId) return alert('Select a post first');
             saveCurrentFile();
-            await callAPI('pushFiles', { postId: currentPostId, files: fileSystem });
+            // Build flat file list with paths
+            const files = items.filter(it => it.type === 'file' && it.id !== ROOT_ID).map(f => ({
+                path: buildPath(f.id),
+                content: f.content
+            }));
+            await callAPI('pushFiles', { postId: currentPostId, files });
             alert('Files pushed!');
         }
 
-        // ---------- Likes ----------
+        // ---------- LIKES ----------
         async function loadLikes() {
             if (!currentPostId) return;
             const data = await callAPI('getLikes', { postId: currentPostId });
-            likeCountSpan.innerText = data.count;
+            document.getElementById('likeCount').innerText = data.count;
             // Check if current user liked
             const userLiked = data.likes.some(l => l.anonymous_id === anonymousId);
+            const likeBtn = document.getElementById('likeBtn');
             if (userLiked) likeBtn.classList.add('liked');
             else likeBtn.classList.remove('liked');
         }
 
         async function toggleLike() {
             if (!currentPostId) return;
-            const liked = likeBtn.classList.contains('liked');
+            const liked = document.getElementById('likeBtn').classList.contains('liked');
             if (liked) {
                 await callAPI('unlikePost', { postId: currentPostId, anonymousId });
-                likeBtn.classList.remove('liked');
             } else {
                 await callAPI('likePost', { postId: currentPostId, anonymousId });
-                likeBtn.classList.add('liked');
             }
             loadLikes();
         }
 
-        // ---------- Comments ----------
+        // ---------- COMMENTS ----------
         async function loadComments() {
             if (!currentPostId) return;
             const data = await callAPI('getComments', { postId: currentPostId });
-            commentsSection.innerHTML = '';
+            const container = document.getElementById('commentsSection');
+            container.innerHTML = '';
             data.comments.forEach(c => {
                 const div = document.createElement('div');
                 div.className = 'comment';
@@ -274,79 +799,61 @@
                     <div class="comment-meta">${c.user?.display_name || 'Anonymous'}</div>
                     <div>${c.content}</div>
                 `;
-                commentsSection.appendChild(div);
+                container.appendChild(div);
             });
         }
 
         async function postComment() {
-            const text = commentInput.value.trim();
+            const text = document.getElementById('commentInput').value.trim();
             if (!text || !currentPostId) return;
             await callAPI('addComment', { postId: currentPostId, anonymousId, content: text });
-            commentInput.value = '';
+            document.getElementById('commentInput').value = '';
             loadComments();
-            loadPosts(); // refresh counts
         }
 
-        // ---------- Fork ----------
+        // ---------- FORK ----------
         async function forkPost() {
-            if (!currentPost) return;
-            const title = prompt('Enter title for your forked PAIPO:', currentPost.title + ' (fork)');
+            if (!currentPostId) return;
+            const title = prompt('Enter title for your forked PAIPO:', 'Forked PAIPO');
             if (!title) return;
             await callAPI('forkPost', { originalPostId: currentPostId, anonymousId, newTitle: title });
             alert('Fork created!');
             loadPosts();
         }
 
-        // ---------- New post ----------
+        // ---------- NEW POST ----------
         async function newPost() {
             const title = prompt('Enter PAIPO title:');
             if (!title) return;
-            const data = await callAPI('createPost', { anonymousId, title, description: '' });
+            await callAPI('createPost', { anonymousId, title, description: '' });
             alert('Post created!');
             loadPosts();
-            // Optionally select the new post
-            setTimeout(() => selectPost(data.post.id), 500);
         }
 
-        // ---------- File management (simple) ----------
-        function newFile() {
-            const name = prompt('File name (with extension):');
-            if (!name) return;
-            fileSystem.push({ path: name, content: '' });
-            renderFileTree();
-        }
+        // ---------- EVENT LISTENERS ----------
+        document.getElementById('newPostBtn').addEventListener('click', newPost);
+        document.getElementById('newFileBtn').addEventListener('click', newFile);
+        document.getElementById('newFolderBtn').addEventListener('click', newFolder);
+        document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
+        document.getElementById('saveBtn').addEventListener('click', saveCurrentFile);
+        document.getElementById('pushBtn').addEventListener('click', pushFiles);
+        document.getElementById('likeBtn').addEventListener('click', toggleLike);
+        document.getElementById('postCommentBtn').addEventListener('click', postComment);
+        document.getElementById('forkBtn').addEventListener('click', forkPost);
 
-        function deleteSelected() {
-            if (selectedFileIndex !== undefined && fileSystem.length > 0) {
-                fileSystem.splice(selectedFileIndex, 1);
-                renderFileTree();
-                if (fileSystem.length > 0) selectFile(0);
-                else aceEditor.session.setValue('');
+        // Click on file tree to select
+        document.addEventListener('click', (e) => {
+            const row = e.target.closest('.item-row');
+            if (!row) return;
+            const li = row.closest('.tree-node');
+            if (li) {
+                const id = li.dataset.id;
+                const item = getItem(id);
+                if (item && item.type === 'file') selectFile(id);
             }
-        }
+        });
 
-        // ---------- Init Ace ----------
-        function initAce() {
-            aceEditor = ace.edit('ace-editor');
-            aceEditor.setTheme('ace/theme/tomorrow_night');
-            aceEditor.session.setMode('ace/mode/text');
-            aceEditor.setOptions({ fontSize: '14px', showPrintMargin: false });
-            aceEditor.setReadOnly(false);
-            aceEditor.session.setValue('// select a file');
-        }
-
-        // ---------- Event listeners ----------
-        likeBtn.addEventListener('click', toggleLike);
-        postCommentBtn.addEventListener('click', postComment);
-        forkBtn.addEventListener('click', forkPost);
-        newPostBtn.addEventListener('click', newPost);
-        newFileBtn.addEventListener('click', newFile);
-        newFolderBtn.addEventListener('click', () => alert('Folders not implemented'));
-        deleteBtn.addEventListener('click', deleteSelected);
-        saveBtn.addEventListener('click', saveCurrentFile);
-        pushBtn.addEventListener('click', pushFiles);
-
-        // ---------- Start ----------
+        // ---------- INIT ----------
         (async function() {
             initAce();
             await initUser();
