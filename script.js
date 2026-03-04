@@ -3,7 +3,7 @@
 
 (function() {
     // ---------- Configuration ----------
-    const DIALOGUE_FILES = ['cuss-dialouge.txt', 'dialogue.txt', 'dude.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt'];
+    const DIALOGUE_FILES = ['cuss-dialouge.txt', 'dialogue.txt', 'dude.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'test.PAI'];
     const DB_NAME = 'PackAiDB';
     const DB_VERSION = 2; // upgraded for context store
     const STORE_NAME = 'learnedQA';
