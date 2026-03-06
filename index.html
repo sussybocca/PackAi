@@ -16,15 +16,49 @@
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: #0b0f17;
             height: 100vh;
+            transition: background 0.3s, color 0.3s;
         }
         /* Three.js canvas fills background */
-        canvas {
+        canvas#bg-canvas {
             display: block;
             position: fixed;
             top: 0;
             left: 0;
             z-index: 0;
         }
+        /* Loading overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 20, 40, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Chat container */
         #chat-container {
             position: absolute;
             top: 50%;
@@ -43,13 +77,31 @@
             flex-direction: column;
             overflow: hidden;
             z-index: 10;
-            animation: float 6s ease-in-out infinite;
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
-        @keyframes float {
-            0% { transform: translate(-50%, -50%) translateY(0px); }
-            50% { transform: translate(-50%, -50%) translateY(-10px); }
-            100% { transform: translate(-50%, -50%) translateY(0px); }
+        /* Theme-specific container styles */
+        body.light-mode {
+            background: #f0f4f8;
         }
+        body.light-mode #chat-container {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(0, 0, 0, 0.2);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+        }
+        body.dark-mode {
+            background: #0b0f17;
+        }
+        body.neon-mode #chat-container {
+            border-color: #0ff;
+            box-shadow: 0 0 20px #0ff, 0 0 40px #0ff inset;
+            animation: neon-pulse 2s infinite;
+        }
+        @keyframes neon-pulse {
+            0% { border-color: #0ff; box-shadow: 0 0 20px #0ff, 0 0 40px #0ff inset; }
+            50% { border-color: #f0f; box-shadow: 0 0 30px #f0f, 0 0 60px #f0f inset; }
+            100% { border-color: #0ff; box-shadow: 0 0 20px #0ff, 0 0 40px #0ff inset; }
+        }
+        /* Header */
         #header {
             padding: 16px 24px;
             background: rgba(0, 0, 0, 0.3);
@@ -59,6 +111,20 @@
             align-items: center;
             gap: 12px;
             backdrop-filter: blur(5px);
+            transition: background 0.3s;
+        }
+        body.light-mode #header {
+            background: rgba(255, 255, 255, 0.5);
+            border-bottom-color: rgba(0,0,0,0.1);
+        }
+        body.neon-mode #header {
+            border-bottom-color: #0ff;
+            animation: neon-border-pulse 2s infinite;
+        }
+        @keyframes neon-border-pulse {
+            0% { border-bottom-color: #0ff; }
+            50% { border-bottom-color: #f0f; }
+            100% { border-bottom-color: #0ff; }
         }
         #header h1 {
             color: #a5f3fc;
@@ -67,8 +133,22 @@
             letter-spacing: -0.02em;
             text-shadow: 0 0 20px #00aaff;
             margin-right: auto;
+            transition: color 0.3s, text-shadow 0.3s;
         }
-        #mode-selector {
+        body.light-mode #header h1 {
+            color: #1e3a8a;
+            text-shadow: none;
+        }
+        body.neon-mode #header h1 {
+            color: #fff;
+            text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+            animation: neon-text-flicker 3s infinite;
+        }
+        @keyframes neon-text-flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.9; text-shadow: 0 0 15px #0ff, 0 0 30px #f0f; }
+        }
+        #mode-selector, #theme-selector {
             background: rgba(20, 30, 50, 0.8);
             backdrop-filter: blur(4px);
             border: 1px solid #3b82f6;
@@ -79,10 +159,30 @@
             outline: none;
             cursor: pointer;
             box-shadow: 0 0 10px #3b82f6;
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
-        #mode-selector option {
+        body.light-mode #mode-selector, body.light-mode #theme-selector {
+            background: rgba(255, 255, 255, 0.8);
+            color: #1e293b;
+            border-color: #3b82f6;
+        }
+        body.neon-mode #mode-selector, body.neon-mode #theme-selector {
+            border-color: #0ff;
+            box-shadow: 0 0 15px #0ff;
+            animation: neon-selector-pulse 2s infinite;
+        }
+        @keyframes neon-selector-pulse {
+            0% { border-color: #0ff; box-shadow: 0 0 15px #0ff; }
+            50% { border-color: #f0f; box-shadow: 0 0 20px #f0f; }
+            100% { border-color: #0ff; box-shadow: 0 0 15px #0ff; }
+        }
+        #mode-selector option, #theme-selector option {
             background: #1e2b45;
             color: white;
+        }
+        body.light-mode #mode-selector option, body.light-mode #theme-selector option {
+            background: white;
+            color: black;
         }
         #header .badge {
             background: rgba(37, 99, 235, 0.7);
@@ -94,7 +194,14 @@
             border: 1px solid #3b82f6;
             box-shadow: 0 0 15px #3b82f6;
             white-space: nowrap;
+            transition: background 0.3s, border-color 0.3s;
         }
+        body.neon-mode #header .badge {
+            background: rgba(0, 255, 255, 0.3);
+            border-color: #0ff;
+            box-shadow: 0 0 20px #0ff;
+        }
+        /* Messages area */
         #messages {
             flex: 1;
             padding: 24px;
@@ -133,9 +240,33 @@
             border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             font-size: 1.1rem;
+            transition: background 0.3s;
+        }
+        body.light-mode .avatar {
+            background: rgba(200, 200, 200, 0.8);
+            color: black;
+        }
+        body.neon-mode .avatar {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: #0ff;
+            box-shadow: 0 0 15px #0ff;
+            animation: neon-avatar-pulse 2s infinite;
+        }
+        @keyframes neon-avatar-pulse {
+            0% { box-shadow: 0 0 10px #0ff; }
+            50% { box-shadow: 0 0 20px #f0f; }
+            100% { box-shadow: 0 0 10px #0ff; }
         }
         .user-message .avatar {
             background: rgba(37, 99, 235, 0.9);
+        }
+        body.light-mode .user-message .avatar {
+            background: rgba(37, 99, 235, 0.9);
+            color: white;
+        }
+        body.neon-mode .user-message .avatar {
+            background: rgba(255, 0, 255, 0.3);
+            border-color: #f0f;
         }
         .bubble {
             background: rgba(30, 43, 69, 0.7);
@@ -149,12 +280,37 @@
             word-break: break-word;
             border: 1px solid rgba(100, 180, 255, 0.3);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            transition: background 0.3s, color 0.3s, border-color 0.3s;
+        }
+        body.light-mode .bubble {
+            background: rgba(255, 255, 255, 0.8);
+            color: #1e293b;
+            border-color: rgba(0,0,0,0.1);
+        }
+        body.neon-mode .bubble {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: #0ff;
+            color: #fff;
+            animation: neon-bubble-glow 2s infinite;
+        }
+        @keyframes neon-bubble-glow {
+            0% { border-color: #0ff; box-shadow: 0 0 10px #0ff; }
+            50% { border-color: #f0f; box-shadow: 0 0 20px #f0f; }
+            100% { border-color: #0ff; box-shadow: 0 0 10px #0ff; }
         }
         .user-message .bubble {
             background: rgba(37, 99, 235, 0.8);
             border-top-left-radius: 24px;
             border-top-right-radius: 4px;
             border-color: #3b82f6;
+        }
+        body.light-mode .user-message .bubble {
+            background: rgba(37, 99, 235, 0.8);
+            color: white;
+        }
+        body.neon-mode .user-message .bubble {
+            background: rgba(255, 0, 255, 0.3);
+            border-color: #f0f;
         }
         #input-area {
             padding: 16px 24px;
@@ -163,6 +319,15 @@
             display: flex;
             gap: 12px;
             backdrop-filter: blur(5px);
+            transition: background 0.3s, border-color 0.3s;
+        }
+        body.light-mode #input-area {
+            background: rgba(255, 255, 255, 0.5);
+            border-top-color: rgba(0,0,0,0.1);
+        }
+        body.neon-mode #input-area {
+            border-top-color: #0ff;
+            animation: neon-border-pulse 2s infinite;
         }
         #user-input {
             flex: 1;
@@ -177,9 +342,22 @@
             transition: 0.3s;
             box-shadow: 0 0 15px rgba(59,130,246,0.3);
         }
+        body.light-mode #user-input {
+            background: rgba(255, 255, 255, 0.8);
+            color: black;
+            border-color: #3b82f6;
+        }
+        body.neon-mode #user-input {
+            border-color: #0ff;
+            box-shadow: 0 0 20px #0ff;
+        }
         #user-input:focus {
             border-color: #a5f3fc;
             box-shadow: 0 0 25px #3b82f6;
+        }
+        body.neon-mode #user-input:focus {
+            border-color: #f0f;
+            box-shadow: 0 0 30px #f0f;
         }
         #send-button {
             background: rgba(37, 99, 235, 0.9);
@@ -197,10 +375,29 @@
             letter-spacing: 0.5px;
             white-space: nowrap;
         }
+        body.light-mode #send-button {
+            background: #3b82f6;
+            color: white;
+        }
+        body.neon-mode #send-button {
+            background: transparent;
+            border-color: #0ff;
+            box-shadow: 0 0 20px #0ff;
+            animation: neon-button-pulse 2s infinite;
+        }
+        @keyframes neon-button-pulse {
+            0% { border-color: #0ff; box-shadow: 0 0 15px #0ff; }
+            50% { border-color: #f0f; box-shadow: 0 0 25px #f0f; }
+            100% { border-color: #0ff; box-shadow: 0 0 15px #0ff; }
+        }
         #send-button:hover {
             background: #1d4ed8;
             transform: scale(1.05);
             box-shadow: 0 0 30px #3b82f6;
+        }
+        body.neon-mode #send-button:hover {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: #f0f;
         }
         .typing .bubble::after {
             content: '...';
@@ -226,6 +423,33 @@
             background: #3b82f6;
             border-radius: 10px;
         }
+        body.neon-mode #messages::-webkit-scrollbar-thumb {
+            background: #0ff;
+            box-shadow: 0 0 10px #0ff;
+        }
+
+        /* Custom cursor for neon mode */
+        body.neon-mode, body.neon-mode * {
+            cursor: none;
+        }
+        #neon-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #0ff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+            box-shadow: 0 0 15px #0ff;
+            animation: cursor-pulse 1s infinite;
+        }
+        @keyframes cursor-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
         /* Mobile styles – make it feel like a native app */
         @media (max-width: 600px) {
@@ -248,12 +472,12 @@
             #header h1 {
                 font-size: 1.5rem;
             }
-            #mode-selector {
+            #mode-selector, #theme-selector {
                 font-size: 0.85rem;
                 padding: 6px 12px;
             }
             .badge {
-                display: none; /* hide on very small if needed */
+                display: none;
             }
             #messages {
                 padding: 16px;
@@ -282,8 +506,13 @@
         }
     </style>
 </head>
-<body>
-    <!-- Three.js canvas will be injected here -->
+<body class="dark-mode">
+    <div id="neon-cursor" style="display: none;"></div>
+    <canvas id="bg-canvas"></canvas>
+    <div id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div>Initializing PackAi...</div>
+    </div>
     <div id="chat-container">
         <div id="header">
             <h1>PackAi</h1>
@@ -295,6 +524,11 @@
                 <option value="sarcasm">😏 Sarcasm</option>
                 <option value="heroic">🦸 Heroic</option>
                 <option value="language">🌍 Language</option>
+            </select>
+            <select id="theme-selector">
+                <option value="dark" selected>🌙 Dark</option>
+                <option value="light">☀️ Light</option>
+                <option value="neon">💡 Neon</option>
             </select>
             <span class="badge">neural core · online</span>
         </div>
@@ -329,10 +563,9 @@
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 0, 5);
         
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, canvas: document.getElementById('bg-canvas') });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-        document.body.appendChild(renderer.domElement);
         
         // --- Lights (unchanged) ---
         const ambientLight = new THREE.AmbientLight(0x404060);
@@ -458,6 +691,42 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        // Hide loading overlay when everything is ready
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+            }, 500); // slight delay to ensure smooth transition
+        });
+    </script>
+
+    <script>
+        // Theme switching
+        const themeSelector = document.getElementById('theme-selector');
+        const neonCursor = document.getElementById('neon-cursor');
+
+        function setTheme(theme) {
+            document.body.className = theme + '-mode';
+            if (theme === 'neon') {
+                neonCursor.style.display = 'block';
+                document.addEventListener('mousemove', moveCursor);
+            } else {
+                neonCursor.style.display = 'none';
+                document.removeEventListener('mousemove', moveCursor);
+            }
+        }
+
+        function moveCursor(e) {
+            neonCursor.style.left = e.clientX - 10 + 'px';
+            neonCursor.style.top = e.clientY - 10 + 'px';
+        }
+
+        themeSelector.addEventListener('change', (e) => setTheme(e.target.value));
+
+        // Initialize with dark mode
+        setTheme('dark');
+
+        // Your existing script.js will handle mode switching, etc.
     </script>
 
     <!-- PackAi Script (modified for dynamic mode switching) -->
