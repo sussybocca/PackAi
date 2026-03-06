@@ -1,10 +1,20 @@
-// PackAi – The Most Advanced AI Engine Ever
-// Fully functional – includes all parsers, stopwords, UI functions, and error handling
+// PackAi – The Most Advanced AI Engine Ever (with dynamic mode switching)
 
 (function() {
     // ---------- Configuration ----------
-    // Removed 'dude.txt' because it was causing 404 errors – add only files that exist
-    const DIALOGUE_FILES = ['cuss-dialouge.txt', 'dialogue.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'Human.PAI', 'Logic.PAI', 'test.PAI'];
+    // Presets for different dialogue modes
+    const MODES = {
+        default: ['cuss-dialouge.txt', 'dialogue.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'Human.PAI', 'Logic.PAI', 'heroic.pai'],
+        cuss: ['cuss-dialouge.txt'],
+        human: ['Human.PAI'],
+        logic: ['Logic.PAI'],
+        sarcasm: ['sarcasm.txt'],
+        heroic: ['heroic.pai'],
+        language: ['language.txt']
+    };
+
+    let DIALOGUE_FILES = MODES.default; // current file list
+
     const DB_NAME = 'PackAiDB';
     const DB_VERSION = 3;
     const STORE_NAME = 'learnedQA';
@@ -17,6 +27,7 @@
     const messagesDiv = document.getElementById('messages');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
+    const modeSelector = document.getElementById('mode-selector');
 
     // Context memory
     let conversationHistory = [];
@@ -110,7 +121,6 @@
                 console.log('Found backup from', new Date(backup.timestamp).toLocaleString());
                 if (backup.prefs) userPrefs = backup.prefs;
                 if (backup.context) conversationHistory = backup.context.slice(0, MAX_HISTORY);
-                // learned pairs not restored automatically to avoid conflicts
             } catch (e) {
                 console.error('Backup restore failed:', e);
             }
@@ -494,19 +504,20 @@
         }
     }
 
+    // Clear messages and reset conversation
+    function resetChat() {
+        messagesDiv.innerHTML = '';
+        conversationHistory = [];
+        pendingQuestion = null;
+    }
+
     // ---------- API Key Handling ----------
     const API_KEY_STORAGE_KEY = 'packai_api_key';
 
-    async function getOrCreateAPIKey() {
-        let apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-        if (apiKey) {
-            console.log('API key found in localStorage');
-            return apiKey;
-        }
-
-        console.log('No API key found. Generating from dialogue files...');
+    async function getOrCreateAPIKey(fileList) {
+        // Always regenerate key based on current file list
+        console.log('Generating API key for mode...');
         try {
-            const fileList = Array.isArray(DIALOGUE_FILES) ? DIALOGUE_FILES : [DIALOGUE_FILES];
             const fileContents = {};
 
             for (const file of fileList) {
@@ -540,20 +551,10 @@
         }
     }
 
-    // ---------- Initialization ----------
-    async function init() {
-        try {
-            db = await openDB();
-            console.log('IndexedDB ready');
-            await loadContext();
-            await loadPrefs();
-            await restoreFromBackup();
-            startBackup();
-        } catch (e) {
-            console.error('IndexedDB failed', e);
-        }
-
-        const apiKey = await getOrCreateAPIKey();
+    // ---------- Load Knowledge for a given file list ----------
+    async function loadKnowledge(fileList) {
+        // Generate new API key (or reuse if same files? but simpler to regenerate)
+        const apiKey = await getOrCreateAPIKey(fileList);
         const fileContents = decodeAPIKey(apiKey);
 
         let baseKnowledge = [];
@@ -577,21 +578,50 @@
         knowledgeBase = mergeKnowledge(baseKnowledge, learned);
         console.log(`Total knowledge: ${knowledgeBase.length} entries`);
 
+        // Update greeting
+        let greeting = `Switched to ${modeSelector.selectedOptions[0].textContent}. `;
+        if (userPrefs.age) {
+            greeting += `I remember you're ${userPrefs.age}. `;
+        }
+        greeting += 'How can I help?';
+        addMessage(greeting, 'ai');
+    }
+
+    // ---------- Mode switching ----------
+    async function switchMode(mode) {
+        const files = MODES[mode];
+        if (!files) return;
+        DIALOGUE_FILES = files;
+        resetChat();
+        await loadKnowledge(files);
+    }
+
+    // ---------- Initialization ----------
+    async function init() {
+        try {
+            db = await openDB();
+            console.log('IndexedDB ready');
+            await loadContext();
+            await loadPrefs();
+            await restoreFromBackup();
+            startBackup();
+        } catch (e) {
+            console.error('IndexedDB failed', e);
+        }
+
+        // Set up mode selector
+        modeSelector.addEventListener('change', (e) => {
+            switchMode(e.target.value);
+        });
+
+        // Load default mode
+        await loadKnowledge(MODES.default);
+
+        // Attach event listeners
         sendButton.addEventListener('click', () => handleUserMessage(userInput.value));
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleUserMessage(userInput.value);
         });
-
-        if (knowledgeBase.length === 0) {
-            addMessage('⚠️ No knowledge files loaded. Check console for errors.', 'ai');
-        } else {
-            let greeting = 'Hello, I\'m PackAi. ';
-            if (userPrefs.age) {
-                greeting += `I remember you're ${userPrefs.age}. `;
-            }
-            greeting += 'What would you like to talk about?';
-            addMessage(greeting, 'ai');
-        }
     }
 
     init().catch(console.error);
