@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>PackAi – Immersive AI Experience</title>
+    <title>PackAi – Ultimate Immersive AI</title>
     <style>
         * {
             box-sizing: border-box;
@@ -18,7 +18,6 @@
             height: 100vh;
             transition: background 0.3s, color 0.3s;
         }
-        /* Three.js canvas fills background */
         canvas#bg-canvas {
             display: block;
             position: fixed;
@@ -26,14 +25,14 @@
             left: 0;
             z-index: 0;
         }
-        /* Loading overlay */
+        /* Loading overlay with Three.js background (handled by script) */
         #loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 20, 40, 0.9);
+            background: transparent; /* Three.js scene will be behind, we add a dark overlay */
             backdrop-filter: blur(10px);
             z-index: 1000;
             display: flex;
@@ -48,16 +47,6 @@
             opacity: 0;
             pointer-events: none;
         }
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         /* Chat container */
         #chat-container {
             position: absolute;
@@ -79,17 +68,12 @@
             z-index: 10;
             transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
-        /* Theme-specific container styles */
-        body.light-mode {
-            background: #f0f4f8;
-        }
+        /* Theme-specific container styles (same as before) */
+        body.light-mode { background: #f0f4f8; }
         body.light-mode #chat-container {
             background: rgba(255, 255, 255, 0.6);
             border-color: rgba(0, 0, 0, 0.2);
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
-        }
-        body.dark-mode {
-            background: #0b0f17;
         }
         body.neon-mode #chat-container {
             border-color: #0ff;
@@ -148,67 +132,72 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.9; text-shadow: 0 0 15px #0ff, 0 0 30px #f0f; }
         }
-        #mode-selector, #theme-selector {
-            background: rgba(20, 30, 50, 0.8);
-            backdrop-filter: blur(4px);
-            border: 1px solid #3b82f6;
-            border-radius: 40px;
+        /* Tab bar */
+        #tab-bar {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
             padding: 8px 16px;
-            color: white;
-            font-size: 0.95rem;
-            outline: none;
-            cursor: pointer;
-            box-shadow: 0 0 10px #3b82f6;
-            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+            gap: 8px;
+            border-bottom: 1px solid rgba(100, 180, 255, 0.4);
         }
-        body.light-mode #mode-selector, body.light-mode #theme-selector {
-            background: rgba(255, 255, 255, 0.8);
-            color: #1e293b;
-            border-color: #3b82f6;
-        }
-        body.neon-mode #mode-selector, body.neon-mode #theme-selector {
-            border-color: #0ff;
-            box-shadow: 0 0 15px #0ff;
-            animation: neon-selector-pulse 2s infinite;
-        }
-        @keyframes neon-selector-pulse {
-            0% { border-color: #0ff; box-shadow: 0 0 15px #0ff; }
-            50% { border-color: #f0f; box-shadow: 0 0 20px #f0f; }
-            100% { border-color: #0ff; box-shadow: 0 0 15px #0ff; }
-        }
-        #mode-selector option, #theme-selector option {
-            background: #1e2b45;
-            color: white;
-        }
-        body.light-mode #mode-selector option, body.light-mode #theme-selector option {
-            background: white;
-            color: black;
-        }
-        #header .badge {
-            background: rgba(37, 99, 235, 0.7);
-            color: white;
-            padding: 4px 16px;
-            border-radius: 40px;
-            font-size: 0.85rem;
-            font-weight: 500;
+        .tab-button {
+            background: transparent;
             border: 1px solid #3b82f6;
-            box-shadow: 0 0 15px #3b82f6;
-            white-space: nowrap;
-            transition: background 0.3s, border-color 0.3s;
+            color: #a5f3fc;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
         }
-        body.neon-mode #header .badge {
-            background: rgba(0, 255, 255, 0.3);
+        .tab-button.active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 0 15px #3b82f6;
+        }
+        body.light-mode .tab-button {
+            color: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+        body.light-mode .tab-button.active {
+            background: #1e3a8a;
+            color: white;
+        }
+        body.neon-mode .tab-button {
             border-color: #0ff;
+            color: #0ff;
+        }
+        body.neon-mode .tab-button.active {
+            background: #0ff;
+            color: black;
             box-shadow: 0 0 20px #0ff;
         }
-        /* Messages area */
+        /* Main content area (tab content) */
+        #main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        /* Chat pane (original messages + input) */
+        #chat-pane {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
         #messages {
             flex: 1;
-            padding: 24px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            padding-right: 10px;
         }
         .message {
             display: flex;
@@ -240,33 +229,13 @@
             border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             font-size: 1.1rem;
-            transition: background 0.3s;
-        }
-        body.light-mode .avatar {
-            background: rgba(200, 200, 200, 0.8);
-            color: black;
-        }
-        body.neon-mode .avatar {
-            background: rgba(0, 255, 255, 0.2);
-            border-color: #0ff;
-            box-shadow: 0 0 15px #0ff;
-            animation: neon-avatar-pulse 2s infinite;
-        }
-        @keyframes neon-avatar-pulse {
-            0% { box-shadow: 0 0 10px #0ff; }
-            50% { box-shadow: 0 0 20px #f0f; }
-            100% { box-shadow: 0 0 10px #0ff; }
+            transition: background 0.3s, border-color 0.3s;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
         }
         .user-message .avatar {
-            background: rgba(37, 99, 235, 0.9);
-        }
-        body.light-mode .user-message .avatar {
-            background: rgba(37, 99, 235, 0.9);
-            color: white;
-        }
-        body.neon-mode .user-message .avatar {
-            background: rgba(255, 0, 255, 0.3);
-            border-color: #f0f;
+            background-color: rgba(37, 99, 235, 0.9);
         }
         .bubble {
             background: rgba(30, 43, 69, 0.7);
@@ -282,52 +251,16 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
             transition: background 0.3s, color 0.3s, border-color 0.3s;
         }
-        body.light-mode .bubble {
-            background: rgba(255, 255, 255, 0.8);
-            color: #1e293b;
-            border-color: rgba(0,0,0,0.1);
-        }
-        body.neon-mode .bubble {
-            background: rgba(0, 0, 0, 0.5);
-            border-color: #0ff;
-            color: #fff;
-            animation: neon-bubble-glow 2s infinite;
-        }
-        @keyframes neon-bubble-glow {
-            0% { border-color: #0ff; box-shadow: 0 0 10px #0ff; }
-            50% { border-color: #f0f; box-shadow: 0 0 20px #f0f; }
-            100% { border-color: #0ff; box-shadow: 0 0 10px #0ff; }
-        }
         .user-message .bubble {
             background: rgba(37, 99, 235, 0.8);
             border-top-left-radius: 24px;
             border-top-right-radius: 4px;
             border-color: #3b82f6;
         }
-        body.light-mode .user-message .bubble {
-            background: rgba(37, 99, 235, 0.8);
-            color: white;
-        }
-        body.neon-mode .user-message .bubble {
-            background: rgba(255, 0, 255, 0.3);
-            border-color: #f0f;
-        }
         #input-area {
-            padding: 16px 24px;
-            background: rgba(0, 0, 0, 0.3);
-            border-top: 1px solid rgba(100, 180, 255, 0.4);
             display: flex;
             gap: 12px;
-            backdrop-filter: blur(5px);
-            transition: background 0.3s, border-color 0.3s;
-        }
-        body.light-mode #input-area {
-            background: rgba(255, 255, 255, 0.5);
-            border-top-color: rgba(0,0,0,0.1);
-        }
-        body.neon-mode #input-area {
-            border-top-color: #0ff;
-            animation: neon-border-pulse 2s infinite;
+            margin-top: 16px;
         }
         #user-input {
             flex: 1;
@@ -341,23 +274,6 @@
             outline: none;
             transition: 0.3s;
             box-shadow: 0 0 15px rgba(59,130,246,0.3);
-        }
-        body.light-mode #user-input {
-            background: rgba(255, 255, 255, 0.8);
-            color: black;
-            border-color: #3b82f6;
-        }
-        body.neon-mode #user-input {
-            border-color: #0ff;
-            box-shadow: 0 0 20px #0ff;
-        }
-        #user-input:focus {
-            border-color: #a5f3fc;
-            box-shadow: 0 0 25px #3b82f6;
-        }
-        body.neon-mode #user-input:focus {
-            border-color: #f0f;
-            box-shadow: 0 0 30px #f0f;
         }
         #send-button {
             background: rgba(37, 99, 235, 0.9);
@@ -375,60 +291,118 @@
             letter-spacing: 0.5px;
             white-space: nowrap;
         }
-        body.light-mode #send-button {
-            background: #3b82f6;
-            color: white;
-        }
-        body.neon-mode #send-button {
-            background: transparent;
-            border-color: #0ff;
-            box-shadow: 0 0 20px #0ff;
-            animation: neon-button-pulse 2s infinite;
-        }
-        @keyframes neon-button-pulse {
-            0% { border-color: #0ff; box-shadow: 0 0 15px #0ff; }
-            50% { border-color: #f0f; box-shadow: 0 0 25px #f0f; }
-            100% { border-color: #0ff; box-shadow: 0 0 15px #0ff; }
-        }
-        #send-button:hover {
-            background: #1d4ed8;
-            transform: scale(1.05);
-            box-shadow: 0 0 30px #3b82f6;
-        }
-        body.neon-mode #send-button:hover {
-            background: rgba(0, 255, 255, 0.2);
-            border-color: #f0f;
-        }
-        .typing .bubble::after {
-            content: '...';
-            animation: dots 1.5s steps(3, end) infinite;
-            display: inline-block;
-            width: 24px;
-        }
-        @keyframes dots {
-            0%, 20% { content: ''; }
-            40% { content: '.'; }
-            60% { content: '..'; }
-            80%, 100% { content: '...'; }
-        }
-        /* Scrollbar styling */
-        #messages::-webkit-scrollbar {
-            width: 6px;
-        }
-        #messages::-webkit-scrollbar-track {
+        /* Customization pane */
+        .customize-section {
+            margin-bottom: 24px;
             background: rgba(0,0,0,0.2);
-            border-radius: 10px;
+            border-radius: 20px;
+            padding: 16px;
         }
-        #messages::-webkit-scrollbar-thumb {
+        .customize-section h3 {
+            color: #a5f3fc;
+            margin-bottom: 12px;
+        }
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .color-picker label {
+            color: #f0f4ff;
+            width: 100px;
+        }
+        .color-picker input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            cursor: pointer;
+        }
+        .avatar-upload {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .avatar-upload button {
             background: #3b82f6;
-            border-radius: 10px;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: white;
+            cursor: pointer;
         }
-        body.neon-mode #messages::-webkit-scrollbar-thumb {
-            background: #0ff;
-            box-shadow: 0 0 10px #0ff;
+        .sound-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
         }
-
-        /* Custom cursor for neon mode */
+        .sound-button {
+            background: rgba(30, 43, 69, 0.8);
+            border: 1px solid #3b82f6;
+            border-radius: 20px;
+            padding: 10px;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .sound-button:hover {
+            background: #3b82f6;
+        }
+        /* Test AI pane */
+        #test-console {
+            background: #1e1e2e;
+            border-radius: 16px;
+            padding: 16px;
+            font-family: monospace;
+            color: #0f0;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 16px;
+            white-space: pre-wrap;
+        }
+        .file-upload-area {
+            border: 2px dashed #3b82f6;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+        /* Emoji builder */
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .emoji-item {
+            font-size: 2rem;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 8px;
+            transition: 0.2s;
+        }
+        .emoji-item:hover {
+            background: #3b82f6;
+            transform: scale(1.1);
+        }
+        #emoji-preview {
+            font-size: 3rem;
+            text-align: center;
+            margin: 16px 0;
+            min-height: 80px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+            padding: 16px;
+        }
+        /* Custom cursor for neon mode (same as before) */
         body.neon-mode, body.neon-mode * {
             cursor: none;
         }
@@ -450,8 +424,7 @@
             50% { transform: scale(1.2); opacity: 0.8; }
             100% { transform: scale(1); opacity: 1; }
         }
-
-        /* Mobile styles – make it feel like a native app */
+        /* Mobile */
         @media (max-width: 600px) {
             #chat-container {
                 width: 100%;
@@ -464,7 +437,6 @@
                 animation: none;
                 border: none;
                 box-shadow: none;
-                background: rgba(10, 20, 40, 0.7);
             }
             #header {
                 padding: 12px 16px;
@@ -479,29 +451,9 @@
             .badge {
                 display: none;
             }
-            #messages {
-                padding: 16px;
-            }
-            .message {
-                max-width: 90%;
-            }
-            .avatar {
-                width: 36px;
-                height: 36px;
-                font-size: 1rem;
-            }
-            .bubble {
-                padding: 10px 16px;
-                font-size: 0.95rem;
-            }
-            #input-area {
-                padding: 12px 16px;
-            }
-            #user-input {
-                padding: 12px 16px;
-            }
-            #send-button {
-                padding: 0 20px;
+            .tab-button {
+                padding: 4px 12px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -510,8 +462,11 @@
     <div id="neon-cursor" style="display: none;"></div>
     <canvas id="bg-canvas"></canvas>
     <div id="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div>Initializing PackAi...</div>
+        <!-- Three.js loading animation will be drawn on canvas behind overlay -->
+        <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 40px; backdrop-filter: blur(10px);">
+            <div style="font-size: 1.5rem; margin-bottom: 20px;">Initializing PackAi...</div>
+            <div style="width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        </div>
     </div>
     <div id="chat-container">
         <div id="header">
@@ -532,15 +487,89 @@
             </select>
             <span class="badge">neural core · online</span>
         </div>
-        <div id="messages">
-            <div class="message">
-                <div class="avatar">P</div>
-                <div class="bubble">Hello, I'm PackAi. Choose a mode above to get started.</div>
-            </div>
+        <!-- Tab bar -->
+        <div id="tab-bar">
+            <button class="tab-button active" data-tab="chat">💬 Chat</button>
+            <button class="tab-button" data-tab="customize">🎨 Customize</button>
+            <button class="tab-button" data-tab="test">🧪 Test AI</button>
+            <button class="tab-button" data-tab="emoji">😊 Emoji Builder</button>
         </div>
-        <div id="input-area">
-            <input type="text" id="user-input" placeholder="Type your message..." autofocus>
-            <button id="send-button">Send</button>
+        <!-- Main content (tab panes) -->
+        <div id="main-content">
+            <!-- Chat Pane -->
+            <div id="chat-pane" class="tab-pane active">
+                <div id="messages">
+                    <div class="message">
+                        <div class="avatar" id="ai-avatar">P</div>
+                        <div class="bubble">Hello, I'm PackAi. Choose a mode above to get started.</div>
+                    </div>
+                </div>
+                <div id="input-area">
+                    <input type="text" id="user-input" placeholder="Type your message..." autofocus>
+                    <button id="send-button">Send</button>
+                </div>
+            </div>
+            <!-- Customize Pane -->
+            <div id="customize-pane" class="tab-pane">
+                <div class="customize-section">
+                    <h3>Avatar Colors</h3>
+                    <div class="color-picker">
+                        <label>Your Avatar</label>
+                        <input type="color" id="user-color" value="#2563eb">
+                    </div>
+                    <div class="color-picker">
+                        <label>AI Avatar</label>
+                        <input type="color" id="ai-color" value="#1e2b45">
+                    </div>
+                </div>
+                <div class="customize-section">
+                    <h3>Upload Avatar Images</h3>
+                    <div class="avatar-upload">
+                        <span>Your Avatar:</span>
+                        <button id="upload-user-avatar">Choose Image</button>
+                        <input type="file" id="user-avatar-file" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="avatar-upload">
+                        <span>AI Avatar:</span>
+                        <button id="upload-ai-avatar">Choose Image</button>
+                        <input type="file" id="ai-avatar-file" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                <div class="customize-section">
+                    <h3>Sound Board</h3>
+                    <div class="sound-board">
+                        <div class="sound-button" data-sound="pop">Pop</div>
+                        <div class="sound-button" data-sound="ding">Ding</div>
+                        <div class="sound-button" data-sound="whoosh">Whoosh</div>
+                        <div class="sound-button" data-sound="notification">Notify</div>
+                        <div class="sound-button" data-sound="error">Error</div>
+                        <div class="sound-button" data-sound="success">Success</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Test AI Pane -->
+            <div id="test-pane" class="tab-pane">
+                <h3 style="color: #a5f3fc; margin-bottom: 16px;">Test Custom Knowledge Files</h3>
+                <div class="file-upload-area" id="test-upload-area">
+                    <p>Click or drag .txt / .pai files here</p>
+                    <input type="file" id="test-file-input" accept=".txt,.pai" multiple style="display: none;">
+                </div>
+                <div>
+                    <button id="test-load-btn" style="background: #3b82f6; border: none; border-radius: 30px; padding: 12px 24px; color: white; width: 100%;">Load and Test</button>
+                </div>
+                <div id="test-console">
+                    > Ready to test. Upload files and click Load.
+                </div>
+            </div>
+            <!-- Emoji Builder Pane -->
+            <div id="emoji-pane" class="tab-pane">
+                <h3 style="color: #a5f3fc; margin-bottom: 16px;">Build Your Own Emoji</h3>
+                <div id="emoji-preview">😊</div>
+                <div class="emoji-grid" id="emoji-grid">
+                    <!-- Filled by JS -->
+                </div>
+                <button id="copy-emoji-btn" style="background: #3b82f6; border: none; border-radius: 30px; padding: 12px; color: white; width: 100%;">Copy Emoji String</button>
+            </div>
         </div>
     </div>
 
@@ -556,7 +585,7 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // --- Setup Scene, Camera, Renderer (unchanged) ---
+        // --- Setup Scene, Camera, Renderer for background ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050510);
         
@@ -692,16 +721,16 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Hide loading overlay when everything is ready
+        // Hide loading overlay when everything is ready (but keep Three.js running)
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('loading-overlay').classList.add('hidden');
-            }, 500); // slight delay to ensure smooth transition
+            }, 1500); // show loading for 1.5s
         });
     </script>
 
     <script>
-        // Theme switching
+        // --- Theme switching (same as before) ---
         const themeSelector = document.getElementById('theme-selector');
         const neonCursor = document.getElementById('neon-cursor');
 
@@ -722,14 +751,199 @@
         }
 
         themeSelector.addEventListener('change', (e) => setTheme(e.target.value));
-
-        // Initialize with dark mode
         setTheme('dark');
 
-        // Your existing script.js will handle mode switching, etc.
+        // --- Tab switching ---
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const panes = {
+            chat: document.getElementById('chat-pane'),
+            customize: document.getElementById('customize-pane'),
+            test: document.getElementById('test-pane'),
+            emoji: document.getElementById('emoji-pane')
+        };
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const tab = btn.dataset.tab;
+                Object.values(panes).forEach(p => p.classList.remove('active'));
+                panes[tab].classList.add('active');
+            });
+        });
+
+        // --- Avatar customization ---
+        const userColor = document.getElementById('user-color');
+        const aiColor = document.getElementById('ai-color');
+        const userAvatar = document.querySelector('.user-message .avatar'); // will be created later
+        const aiAvatar = document.getElementById('ai-avatar');
+
+        // When a new user message is added, we need to set its avatar color.
+        // We'll handle that by overriding the addMessage function later (via script.js hook)
+        // For now, just update the AI avatar preview.
+        aiColor.addEventListener('input', (e) => {
+            aiAvatar.style.backgroundColor = e.target.value;
+        });
+
+        // Upload images
+        document.getElementById('upload-user-avatar').addEventListener('click', () => {
+            document.getElementById('user-avatar-file').click();
+        });
+        document.getElementById('user-avatar-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    // We'll need to apply to future user avatars; store in localStorage or variable
+                    localStorage.setItem('userAvatar', event.target.result);
+                    alert('User avatar updated! (Will apply to new messages)');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('upload-ai-avatar').addEventListener('click', () => {
+            document.getElementById('ai-avatar-file').click();
+        });
+        document.getElementById('ai-avatar-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    aiAvatar.style.backgroundImage = `url('${event.target.result}')`;
+                    aiAvatar.textContent = ''; // remove text
+                    localStorage.setItem('aiAvatar', event.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // --- Sound board ---
+        const soundButtons = document.querySelectorAll('.sound-button');
+        // Simple audio using Web Audio API or Audio objects
+        function playSound(type) {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            let frequency = 440;
+            let duration = 0.2;
+            switch(type) {
+                case 'pop': frequency = 300; duration = 0.1; break;
+                case 'ding': frequency = 800; duration = 0.3; break;
+                case 'whoosh': frequency = 200; oscillator.type = 'sawtooth'; duration = 0.5; break;
+                case 'notification': frequency = 600; duration = 0.2; break;
+                case 'error': frequency = 200; duration = 0.4; break;
+                case 'success': frequency = 1000; duration = 0.3; break;
+            }
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+        soundButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sound = btn.dataset.sound;
+                playSound(sound);
+            });
+        });
+
+        // --- Test AI file upload and console ---
+        const testUploadArea = document.getElementById('test-upload-area');
+        const testFileInput = document.getElementById('test-file-input');
+        const testLoadBtn = document.getElementById('test-load-btn');
+        const testConsole = document.getElementById('test-console');
+
+        testUploadArea.addEventListener('click', () => testFileInput.click());
+        testFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                testConsole.innerText += `\n> Selected ${e.target.files.length} file(s). Click Load to test.`;
+            }
+        });
+
+        testLoadBtn.addEventListener('click', async () => {
+            const files = testFileInput.files;
+            if (files.length === 0) {
+                testConsole.innerText += '\n> No files selected.';
+                return;
+            }
+            testConsole.innerText += '\n> Loading files...';
+            // Here we would integrate with the AI engine. For demo, we just log file contents.
+            for (let file of files) {
+                const text = await file.text();
+                testConsole.innerText += `\n> Loaded ${file.name}: ${text.substring(0, 100)}...`;
+            }
+            testConsole.innerText += '\n> Test complete. (Integration with AI pending)';
+        });
+
+        // --- Emoji builder ---
+        const emojiList = ['😀','😂','😍','😎','😢','😡','👍','👎','❤️','🔥','🎉','🌟','🐶','🐱','🍕','⚽','🚗','✈️','🎵','📚'];
+        const emojiGrid = document.getElementById('emoji-grid');
+        const emojiPreview = document.getElementById('emoji-preview');
+        let currentEmojiString = '😊';
+
+        emojiList.forEach(emoji => {
+            const div = document.createElement('div');
+            div.className = 'emoji-item';
+            div.textContent = emoji;
+            div.addEventListener('click', () => {
+                currentEmojiString += emoji;
+                emojiPreview.textContent = currentEmojiString;
+            });
+            emojiGrid.appendChild(div);
+        });
+
+        document.getElementById('copy-emoji-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(currentEmojiString).then(() => {
+                alert('Emoji string copied!');
+            });
+        });
+
+        // --- Hook into message sending to apply avatar customizations ---
+        // We'll override the original addMessage function by capturing it after script.js loads.
+        // This is a bit hacky but works: we wait for script.js to load, then replace its addMessage.
+        window.addEventListener('load', () => {
+            // Assume script.js has defined a global `addMessage`? Actually it's inside IIFE.
+            // We'll instead listen for new messages via MutationObserver to update avatars.
+            const messagesDiv = document.getElementById('messages');
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach(m => {
+                    m.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 && node.classList.contains('message')) {
+                            const avatar = node.querySelector('.avatar');
+                            if (node.classList.contains('user-message')) {
+                                // apply user avatar color/image
+                                const userColorVal = userColor.value;
+                                avatar.style.backgroundColor = userColorVal;
+                                const storedUserAvatar = localStorage.getItem('userAvatar');
+                                if (storedUserAvatar) {
+                                    avatar.style.backgroundImage = `url('${storedUserAvatar}')`;
+                                    avatar.textContent = '';
+                                }
+                            } else {
+                                // ai avatar
+                                const aiColorVal = aiColor.value;
+                                avatar.style.backgroundColor = aiColorVal;
+                                const storedAiAvatar = localStorage.getItem('aiAvatar');
+                                if (storedAiAvatar) {
+                                    avatar.style.backgroundImage = `url('${storedAiAvatar}')`;
+                                    avatar.textContent = '';
+                                } else {
+                                    avatar.textContent = 'P'; // default
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+            observer.observe(messagesDiv, { childList: true, subtree: true });
+        });
     </script>
 
-    <!-- PackAi Script (modified for dynamic mode switching) -->
+    <!-- Original PackAi Script (must be loaded after this HTML to ensure DOM elements exist) -->
     <script src="script.js"></script>
 </body>
 </html>
