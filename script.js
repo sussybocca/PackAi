@@ -1,13 +1,15 @@
 // PackAi – The Most Advanced AI Engine Ever
-// Reliable file loading (like the working version) + context, sentiment, topics
+// Fully functional – includes all parsers, stopwords, UI functions, and error handling
 
 (function() {
     // ---------- Configuration ----------
-    const DIALOGUE_FILES = ['cuss-dialouge.txt', 'dialogue.txt', 'dude.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'test.PAI'];
+    // Removed 'dude.txt' because it was causing 404 errors – add only files that exist
+    const DIALOGUE_FILES = ['cuss-dialouge.txt', 'dialogue.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'Human.PAI', 'Logic.PAI', 'test.PAI'];
     const DB_NAME = 'PackAiDB';
-    const DB_VERSION = 2; // upgraded for context store
+    const DB_VERSION = 3;
     const STORE_NAME = 'learnedQA';
     const CONTEXT_STORE = 'conversationContext';
+    const PREFS_STORE = 'userPreferences';
 
     let knowledgeBase = [];
     let db;
@@ -19,6 +21,9 @@
     // Context memory
     let conversationHistory = [];
     const MAX_HISTORY = 10;
+
+    // User preferences (age, etc.)
+    let userPrefs = {};
 
     // Sentiment lexicons
     const positiveWords = new Set(['good', 'great', 'awesome', 'excellent', 'happy', 'love', 'wonderful', 'fantastic', 'nice', 'perfect', 'glad', 'pleased', 'joy', 'amazing', 'brilliant']);
@@ -33,7 +38,7 @@
         life: ['life', 'love', 'meaning', 'purpose', 'death', 'happiness', 'sad', 'relationship', 'family', 'friend']
     };
 
-    // Full stopwords list (same as working version)
+    // Full stopwords list
     const stopwords = new Set([
         'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
         'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
@@ -48,6 +53,83 @@
         'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don',
         'should', 'now'
     ]);
+
+    // ---------- Cookie Utilities ----------
+    function setCookie(name, value, days = 365) {
+        const secure = location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(JSON.stringify(value))}; path=/; max-age=${days * 86400}; SameSite=Strict${secure}`;
+    }
+
+    function getCookie(name) {
+        const cookies = document.cookie.split('; ').reduce((acc, cookie) => {
+            const [key, val] = cookie.split('=');
+            acc[decodeURIComponent(key)] = decodeURIComponent(val);
+            return acc;
+        }, {});
+        if (cookies[name]) {
+            try {
+                return JSON.parse(cookies[name]);
+            } catch {
+                return cookies[name];
+            }
+        }
+        return null;
+    }
+
+    // ---------- Backup ----------
+    let backupInterval = null;
+    async function startBackup() {
+        backupInterval = setInterval(async () => {
+            if (!db) return;
+            try {
+                const learned = await loadLearnedPairs();
+                const backup = {
+                    timestamp: Date.now(),
+                    learned,
+                    context: conversationHistory,
+                    prefs: userPrefs,
+                    localStorage: { ...localStorage }
+                };
+                localStorage.setItem('packai_backup', JSON.stringify(backup));
+                console.log('Backup saved to localStorage.');
+            } catch (e) {
+                console.error('Backup failed:', e);
+            }
+        }, 60000);
+    }
+
+    function stopBackup() {
+        if (backupInterval) clearInterval(backupInterval);
+    }
+
+    async function restoreFromBackup() {
+        const backupStr = localStorage.getItem('packai_backup');
+        if (backupStr) {
+            try {
+                const backup = JSON.parse(backupStr);
+                console.log('Found backup from', new Date(backup.timestamp).toLocaleString());
+                if (backup.prefs) userPrefs = backup.prefs;
+                if (backup.context) conversationHistory = backup.context.slice(0, MAX_HISTORY);
+                // learned pairs not restored automatically to avoid conflicts
+            } catch (e) {
+                console.error('Backup restore failed:', e);
+            }
+        }
+    }
+
+    // ---------- Age Memory ----------
+    function extractAgeFromMessage(message) {
+        const match = message.match(/\b(\d{1,3})\s*(?:years? old|yo)\b/i);
+        if (match) {
+            const age = parseInt(match[1], 10);
+            if (age > 0 && age < 150) {
+                userPrefs.age = age;
+                setCookie('packai_prefs', userPrefs);
+                return age;
+            }
+        }
+        return null;
+    }
 
     // ---------- Text Normalization ----------
     function normalize(text) {
@@ -84,7 +166,7 @@
         return words.filter(w => w.length > 2 && !stopwords.has(w));
     }
 
-    // ---------- IndexedDB Setup ----------
+    // ---------- IndexedDB ----------
     function openDB() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -97,6 +179,9 @@
                 }
                 if (!db.objectStoreNames.contains(CONTEXT_STORE)) {
                     db.createObjectStore(CONTEXT_STORE, { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains(PREFS_STORE)) {
+                    db.createObjectStore(PREFS_STORE, { keyPath: 'key' });
                 }
             };
         });
@@ -142,6 +227,34 @@
         return request;
     }
 
+    async function savePrefs() {
+        if (!db) return;
+        const tx = db.transaction(PREFS_STORE, 'readwrite');
+        const store = tx.objectStore(PREFS_STORE);
+        store.put({ key: 'userPrefs', value: userPrefs });
+        setCookie('packai_prefs', userPrefs);
+        return tx.complete;
+    }
+
+    async function loadPrefs() {
+        const cookiePrefs = getCookie('packai_prefs');
+        if (cookiePrefs) {
+            userPrefs = cookiePrefs;
+            return;
+        }
+        if (!db) return;
+        const tx = db.transaction(PREFS_STORE, 'readonly');
+        const store = tx.objectStore(PREFS_STORE);
+        const request = store.get('userPrefs');
+        request.onsuccess = () => {
+            if (request.result) {
+                userPrefs = request.result.value;
+                setCookie('packai_prefs', userPrefs);
+            }
+        };
+        return request;
+    }
+
     // ---------- Sentiment ----------
     function detectSentiment(text) {
         const words = text.toLowerCase().split(/\s+/);
@@ -170,7 +283,7 @@
         return detected;
     }
 
-    // ---------- Parsers (exactly as in working version) ----------
+    // ---------- Parsers ----------
     function parseTxt(content) {
         return content.split('\n')
             .filter(line => line.includes('::'))
@@ -212,7 +325,7 @@
         return [...base, ...learnedPairs];
     }
 
-    // ---------- Advanced Matching (with context, sentiment, topics) ----------
+    // ---------- Advanced Matching ----------
     function findBestMatch(userMessage, knowledge) {
         const normalizedUser = normalize(userMessage);
         const userKeywords = extractKeywords(normalizedUser);
@@ -225,12 +338,10 @@
         for (const item of knowledge) {
             let score = 0;
 
-            // Base similarity (same as working version)
             if (item.normalized === normalizedUser) score += 100;
             if (normalizedUser.includes(item.normalized)) score += 50;
             else if (item.normalized.includes(normalizedUser)) score += 40;
 
-            // Keyword overlap (Jaccard)
             const commonKeywords = userKeywords.filter(k => item.keywords.includes(k)).length;
             const totalUnique = new Set([...userKeywords, ...item.keywords]).size;
             if (totalUnique > 0) {
@@ -238,7 +349,6 @@
                 score += jaccard * 2;
             }
 
-            // Levenshtein for short messages
             if (userKeywords.length < 3 && item.keywords.length < 3) {
                 const dist = levenshtein(normalizedUser, item.normalized);
                 const maxLen = Math.max(normalizedUser.length, item.normalized.length);
@@ -248,7 +358,6 @@
                 }
             }
 
-            // Profanity/meme boost
             const profaneWords = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'cunt', 'dick', 'bastard', 'prick', 'twat', 'wanker', 'arse', 'bollocks', 'bloody', 'motherfucker', 'cocksucker', 'shithead', 'dickhead', 'piss', 'pussy', 'fucktard', 'goddamn', 'shitfuck', 'fuckstick', 'dickweed', 'asshat', 'shitlord', 'fuckwad', 'twatwaffle', 'cuntpunt', 'fucknugget', 'bitchtits'];
             const memeWords = ['meme', 'drake', 'spongebob', 'pooh', 'gigachad', 'keyboard cat', 'disaster girl', 'this is fine', 'distracted boyfriend', 'woman yelling at cat', 'hide the pain harold', 'expanding brain', 'grumpy cat', 'success kid'];
             
@@ -262,22 +371,23 @@
             const anyWordMatch = item.keywords.some(k => normalizedUser.includes(k));
             if (anyWordMatch) score += 5;
 
-            // Sentiment boost
             if (sentiment === 'positive' && item.answer.toLowerCase().includes('glad')) score += 10;
             if (sentiment === 'negative' && (item.answer.toLowerCase().includes('sorry') || item.answer.toLowerCase().includes('sad'))) score += 10;
 
-            // Topic boost
             const itemTopics = detectTopics(item.question);
             const commonTopics = userTopics.filter(t => itemTopics.includes(t));
             score += commonTopics.length * 15;
 
-            // Context boost
             if (conversationHistory.length > 0) {
                 const lastMsg = conversationHistory[conversationHistory.length-1];
                 if (lastMsg.role === 'user') {
                     const lastTopics = detectTopics(lastMsg.content);
                     if (lastTopics.some(t => itemTopics.includes(t))) score += 10;
                 }
+            }
+
+            if (userPrefs.age && item.answer.toLowerCase().includes(userPrefs.age.toString())) {
+                score += 5;
             }
 
             if (score > bestScore) {
@@ -303,6 +413,11 @@
     async function handleUserMessage(message) {
         const trimmed = message.trim();
         if (!trimmed) return;
+
+        const age = extractAgeFromMessage(trimmed);
+        if (age) {
+            await savePrefs();
+        }
 
         conversationHistory.push({ role: 'user', content: trimmed, timestamp: Date.now() });
         if (conversationHistory.length > MAX_HISTORY) conversationHistory.shift();
@@ -379,7 +494,7 @@
         }
     }
 
-    // ---------- API Key Handling (exactly as working version) ----------
+    // ---------- API Key Handling ----------
     const API_KEY_STORAGE_KEY = 'packai_api_key';
 
     async function getOrCreateAPIKey() {
@@ -431,6 +546,9 @@
             db = await openDB();
             console.log('IndexedDB ready');
             await loadContext();
+            await loadPrefs();
+            await restoreFromBackup();
+            startBackup();
         } catch (e) {
             console.error('IndexedDB failed', e);
         }
@@ -467,7 +585,12 @@
         if (knowledgeBase.length === 0) {
             addMessage('⚠️ No knowledge files loaded. Check console for errors.', 'ai');
         } else {
-            addMessage('Hello, I\'m PackAi. What would you like to talk about?', 'ai');
+            let greeting = 'Hello, I\'m PackAi. ';
+            if (userPrefs.age) {
+                greeting += `I remember you're ${userPrefs.age}. `;
+            }
+            greeting += 'What would you like to talk about?';
+            addMessage(greeting, 'ai');
         }
     }
 
