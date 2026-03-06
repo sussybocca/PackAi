@@ -2,13 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>PackAi – Immersive AI Experience</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
             margin: 0;
             overflow: hidden;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #0b0f17;
+            height: 100vh;
+        }
+        /* Three.js canvas fills background */
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 0;
         }
         #chat-container {
             position: absolute;
@@ -36,44 +51,63 @@
             100% { transform: translate(-50%, -50%) translateY(0px); }
         }
         #header {
-            padding: 24px 32px;
+            padding: 16px 24px;
             background: rgba(0, 0, 0, 0.3);
             border-bottom: 1px solid rgba(100, 180, 255, 0.4);
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             backdrop-filter: blur(5px);
         }
         #header h1 {
             color: #a5f3fc;
             font-weight: 600;
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             letter-spacing: -0.02em;
             text-shadow: 0 0 20px #00aaff;
+            margin-right: auto;
+        }
+        #mode-selector {
+            background: rgba(20, 30, 50, 0.8);
+            backdrop-filter: blur(4px);
+            border: 1px solid #3b82f6;
+            border-radius: 40px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+            box-shadow: 0 0 10px #3b82f6;
+        }
+        #mode-selector option {
+            background: #1e2b45;
+            color: white;
         }
         #header .badge {
             background: rgba(37, 99, 235, 0.7);
             color: white;
             padding: 4px 16px;
             border-radius: 40px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
             border: 1px solid #3b82f6;
             box-shadow: 0 0 15px #3b82f6;
+            white-space: nowrap;
         }
         #messages {
             flex: 1;
-            padding: 32px;
+            padding: 24px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
         .message {
             display: flex;
             align-items: flex-start;
-            gap: 12px;
-            max-width: 80%;
+            gap: 10px;
+            max-width: 85%;
             animation: fadeInUp 0.3s ease;
         }
         @keyframes fadeInUp {
@@ -85,9 +119,9 @@
             flex-direction: row-reverse;
         }
         .avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 44px;
+            width: 40px;
+            height: 40px;
+            border-radius: 40px;
             background: rgba(30, 43, 69, 0.8);
             backdrop-filter: blur(4px);
             display: flex;
@@ -98,6 +132,7 @@
             flex-shrink: 0;
             border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 1.1rem;
         }
         .user-message .avatar {
             background: rgba(37, 99, 235, 0.9);
@@ -105,11 +140,11 @@
         .bubble {
             background: rgba(30, 43, 69, 0.7);
             backdrop-filter: blur(8px);
-            padding: 14px 22px;
+            padding: 12px 18px;
             border-radius: 24px;
             border-top-left-radius: 4px;
             color: #f0f4ff;
-            line-height: 1.6;
+            line-height: 1.5;
             font-size: 1rem;
             word-break: break-word;
             border: 1px solid rgba(100, 180, 255, 0.3);
@@ -122,11 +157,11 @@
             border-color: #3b82f6;
         }
         #input-area {
-            padding: 24px 32px;
+            padding: 16px 24px;
             background: rgba(0, 0, 0, 0.3);
             border-top: 1px solid rgba(100, 180, 255, 0.4);
             display: flex;
-            gap: 16px;
+            gap: 12px;
             backdrop-filter: blur(5px);
         }
         #user-input {
@@ -135,7 +170,7 @@
             backdrop-filter: blur(8px);
             border: 1px solid #3b82f6;
             border-radius: 60px;
-            padding: 18px 28px;
+            padding: 14px 20px;
             font-size: 1rem;
             color: white;
             outline: none;
@@ -151,7 +186,7 @@
             backdrop-filter: blur(4px);
             border: none;
             border-radius: 60px;
-            padding: 0 40px;
+            padding: 0 30px;
             color: white;
             font-weight: 600;
             font-size: 1rem;
@@ -160,6 +195,7 @@
             border: 1px solid #3b82f6;
             box-shadow: 0 0 15px #3b82f6;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
         #send-button:hover {
             background: #1d4ed8;
@@ -180,7 +216,7 @@
         }
         /* Scrollbar styling */
         #messages::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
         #messages::-webkit-scrollbar-track {
             background: rgba(0,0,0,0.2);
@@ -190,6 +226,60 @@
             background: #3b82f6;
             border-radius: 10px;
         }
+
+        /* Mobile styles – make it feel like a native app */
+        @media (max-width: 600px) {
+            #chat-container {
+                width: 100%;
+                height: 100vh;
+                max-width: none;
+                border-radius: 0;
+                top: 0;
+                left: 0;
+                transform: none;
+                animation: none;
+                border: none;
+                box-shadow: none;
+                background: rgba(10, 20, 40, 0.7);
+            }
+            #header {
+                padding: 12px 16px;
+            }
+            #header h1 {
+                font-size: 1.5rem;
+            }
+            #mode-selector {
+                font-size: 0.85rem;
+                padding: 6px 12px;
+            }
+            .badge {
+                display: none; /* hide on very small if needed */
+            }
+            #messages {
+                padding: 16px;
+            }
+            .message {
+                max-width: 90%;
+            }
+            .avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+            .bubble {
+                padding: 10px 16px;
+                font-size: 0.95rem;
+            }
+            #input-area {
+                padding: 12px 16px;
+            }
+            #user-input {
+                padding: 12px 16px;
+            }
+            #send-button {
+                padding: 0 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -197,12 +287,21 @@
     <div id="chat-container">
         <div id="header">
             <h1>PackAi</h1>
+            <select id="mode-selector">
+                <option value="default" selected>🌐 Default (all)</option>
+                <option value="cuss">💬 Cuss</option>
+                <option value="human">🧑 Human</option>
+                <option value="logic">🧠 Logic</option>
+                <option value="sarcasm">😏 Sarcasm</option>
+                <option value="heroic">🦸 Heroic</option>
+                <option value="language">🌍 Language</option>
+            </select>
             <span class="badge">neural core · online</span>
         </div>
         <div id="messages">
             <div class="message">
                 <div class="avatar">P</div>
-                <div class="bubble">Hello, I'm PackAi. I learn from every conversation. What would you like to talk about?</div>
+                <div class="bubble">Hello, I'm PackAi. Choose a mode above to get started.</div>
             </div>
         </div>
         <div id="input-area">
@@ -223,7 +322,7 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // --- Setup Scene, Camera, Renderer ---
+        // --- Setup Scene, Camera, Renderer (unchanged) ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050510);
         
@@ -235,7 +334,7 @@
         renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
         
-        // --- Lights ---
+        // --- Lights (unchanged) ---
         const ambientLight = new THREE.AmbientLight(0x404060);
         scene.add(ambientLight);
         
@@ -243,7 +342,7 @@
         pointLight.position.set(2, 3, 4);
         scene.add(pointLight);
         
-        // --- Create a mesmerizing particle system (galaxy) ---
+        // --- Particle system (galaxy) unchanged ---
         const particlesGeometry = new THREE.BufferGeometry();
         const particlesCount = 8000;
         
@@ -251,12 +350,9 @@
         const colorArray = new Float32Array(particlesCount * 3);
         
         for(let i = 0; i < particlesCount * 3; i += 3) {
-            // Spiral distribution
             const radius = 2 + Math.random() * 4;
             const angle = Math.random() * Math.PI * 2;
             const height = (Math.random() - 0.5) * 5;
-            
-            // Spiral arms
             const armAngle = angle + radius * 0.5;
             const x = Math.cos(armAngle) * radius;
             const y = height;
@@ -266,9 +362,8 @@
             posArray[i+1] = y;
             posArray[i+2] = z;
             
-            // Colors: blues, purples, whites
             const color = new THREE.Color();
-            const hue = 0.6 + Math.random() * 0.2; // blue to purple
+            const hue = 0.6 + Math.random() * 0.2;
             const saturation = 0.8;
             const lightness = 0.5 + Math.random() * 0.4;
             color.setHSL(hue, saturation, lightness);
@@ -292,7 +387,7 @@
         const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
         scene.add(particlesMesh);
         
-        // --- Add a few larger glowing spheres (stars) ---
+        // --- Stars (unchanged) ---
         const starGeometry = new THREE.SphereGeometry(0.1, 8, 8);
         const starMaterial = new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x224488 });
         for (let i = 0; i < 30; i++) {
@@ -308,7 +403,7 @@
             scene.add(star);
         }
         
-        // --- Add a central glowing core (optional) ---
+        // --- Central core (unchanged) ---
         const coreGlow = new THREE.Mesh(
             new THREE.SphereGeometry(0.3, 16, 16),
             new THREE.MeshBasicMaterial({ color: 0x3366ff, emissive: 0x112244 })
@@ -316,7 +411,7 @@
         coreGlow.position.set(0, 0, 0);
         scene.add(coreGlow);
         
-        // --- Add some floating lines (like neural connections) ---
+        // --- Lines (unchanged) ---
         const linesCount = 100;
         const lineGeometry = new THREE.BufferGeometry();
         const linePositions = [];
@@ -340,22 +435,15 @@
         scene.add(lines);
         
         // --- Animation Loop ---
-        let clock = new THREE.Clock();
-        
         function animate() {
             requestAnimationFrame(animate);
             
-            const delta = clock.getDelta();
             const elapsedTime = performance.now() / 1000;
             
-            // Rotate the particle galaxy
             particlesMesh.rotation.y = elapsedTime * 0.05;
             particlesMesh.rotation.x = Math.sin(elapsedTime * 0.2) * 0.1;
-            
-            // Rotate the lines
             lines.rotation.y = elapsedTime * 0.02;
             
-            // Move camera slightly for a subtle parallax
             camera.position.x = Math.sin(elapsedTime * 0.1) * 1;
             camera.position.y = Math.cos(elapsedTime * 0.15) * 0.5;
             camera.lookAt(0, 0, 0);
@@ -365,7 +453,6 @@
         
         animate();
         
-        // --- Handle window resize ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -373,7 +460,7 @@
         });
     </script>
 
-    <!-- Original PackAi Script (unchanged) -->
+    <!-- PackAi Script (modified for dynamic mode switching) -->
     <script src="script.js"></script>
 </body>
 </html>
