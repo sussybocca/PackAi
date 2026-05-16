@@ -79,17 +79,48 @@
         }
     }
 
-    // ---------- Parsers ----------
-    function parseTxt(content) {
-        return content.split('\n')
-            .filter(line => line.includes('::'))
-            .map(line => {
-                const [q, a] = line.split('::').map(s => s.trim());
-                const normalized = normalize(q);
-                const keywords = extractKeywords(normalized);
-                return { question: q, answer: a, normalized, keywords };
-            });
+  function parseTxt(content) {
+    const lines = content.split('\n');
+    const pairs = [];
+    
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        
+        let question, answer;
+        
+        // Try different separators in order
+        if (line.includes('::')) {
+            const parts = line.split('::');
+            question = parts[0].trim();
+            answer = parts.slice(1).join('::').trim();
+        } else if (line.includes('|')) {
+            const parts = line.split('|');
+            question = parts[0].trim();
+            answer = parts.slice(1).join('|').trim();
+        } else if (line.includes('\t')) {
+            const parts = line.split('\t');
+            question = parts[0].trim();
+            answer = parts.slice(1).join('\t').trim();
+        } else if (line.includes(':')) {
+            const parts = line.split(':');
+            question = parts[0].trim();
+            answer = parts.slice(1).join(':').trim();
+        } else {
+            // No separator found, just accept the whole line
+            question = line;
+            answer = line;
+        }
+        
+        if (question && answer) {
+            const normalized = normalize(question);
+            const keywords = extractKeywords(normalized);
+            pairs.push({ question, answer, normalized, keywords });
+        }
     }
+    
+    return pairs;
+}
 
     function parsePAI(content) {
         const lines = content.split('\n');
