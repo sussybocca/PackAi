@@ -1,8 +1,7 @@
-// PackAi – The Most Advanced AI Engine Ever (with dynamic mode switching)
+// PackAi – All storage in IndexedDB (no localStorage)
 
 (function() {
     // ---------- Configuration ----------
-    // Presets for different dialogue modes
     const MODES = {
         default: ['cuss-dialouge.txt', 'dialogue.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'Human.PAI', 'Logic.PAI', 'code-dialouge.txt', 'heroic.pai'],
         cuss: ['cuss-dialouge.txt'],
@@ -13,13 +12,17 @@
         language: ['language.txt']
     };
 
-    let DIALOGUE_FILES = MODES.default; // current file list
+    let DIALOGUE_FILES = MODES.default;
 
     const DB_NAME = 'PackAiDB';
-    const DB_VERSION = 3;
-    const STORE_NAME = 'learnedQA';
+    const DB_VERSION = 1;
+    
+    // Store names
+    const LEARNED_STORE = 'learnedQA';
+    const FILES_STORE = 'fileContents';
     const CONTEXT_STORE = 'conversationContext';
     const PREFS_STORE = 'userPreferences';
+    const API_KEY_STORE = 'apiKeys';
 
     let knowledgeBase = [];
     let db;
@@ -33,7 +36,7 @@
     let conversationHistory = [];
     const MAX_HISTORY = 10;
 
-    // User preferences (age, etc.)
+    // User preferences
     let userPrefs = {};
 
     // Sentiment lexicons
@@ -49,7 +52,7 @@
         life: ['life', 'love', 'meaning', 'purpose', 'death', 'happiness', 'sad', 'relationship', 'family', 'friend']
     };
 
-    // Full stopwords list
+    // Stopwords
     const stopwords = new Set([
         'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
         'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
@@ -65,82 +68,6 @@
         'should', 'now'
     ]);
 
-    // ---------- Cookie Utilities ----------
-    function setCookie(name, value, days = 365) {
-        const secure = location.protocol === 'https:' ? '; Secure' : '';
-        document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(JSON.stringify(value))}; path=/; max-age=${days * 86400}; SameSite=Strict${secure}`;
-    }
-
-    function getCookie(name) {
-        const cookies = document.cookie.split('; ').reduce((acc, cookie) => {
-            const [key, val] = cookie.split('=');
-            acc[decodeURIComponent(key)] = decodeURIComponent(val);
-            return acc;
-        }, {});
-        if (cookies[name]) {
-            try {
-                return JSON.parse(cookies[name]);
-            } catch {
-                return cookies[name];
-            }
-        }
-        return null;
-    }
-
-    // ---------- Backup ----------
-    let backupInterval = null;
-    async function startBackup() {
-        backupInterval = setInterval(async () => {
-            if (!db) return;
-            try {
-                const learned = await loadLearnedPairs();
-                const backup = {
-                    timestamp: Date.now(),
-                    learned,
-                    context: conversationHistory,
-                    prefs: userPrefs,
-                    localStorage: { ...localStorage }
-                };
-                localStorage.setItem('packai_backup', JSON.stringify(backup));
-                console.log('Backup saved to localStorage.');
-            } catch (e) {
-                console.error('Backup failed:', e);
-            }
-        }, 60000);
-    }
-
-    function stopBackup() {
-        if (backupInterval) clearInterval(backupInterval);
-    }
-
-    async function restoreFromBackup() {
-        const backupStr = localStorage.getItem('packai_backup');
-        if (backupStr) {
-            try {
-                const backup = JSON.parse(backupStr);
-                console.log('Found backup from', new Date(backup.timestamp).toLocaleString());
-                if (backup.prefs) userPrefs = backup.prefs;
-                if (backup.context) conversationHistory = backup.context.slice(0, MAX_HISTORY);
-            } catch (e) {
-                console.error('Backup restore failed:', e);
-            }
-        }
-    }
-
-    // ---------- Age Memory ----------
-    function extractAgeFromMessage(message) {
-        const match = message.match(/\b(\d{1,3})\s*(?:years? old|yo)\b/i);
-        if (match) {
-            const age = parseInt(match[1], 10);
-            if (age > 0 && age < 150) {
-                userPrefs.age = age;
-                setCookie('packai_prefs', userPrefs);
-                return age;
-            }
-        }
-        return null;
-    }
-
     // ---------- Text Normalization ----------
     function normalize(text) {
         return text.toLowerCase()
@@ -149,58 +76,126 @@
             .trim();
     }
 
-    // ---------- Levenshtein ----------
-    function levenshtein(a, b) {
-        if (a.length === 0) return b.length;
-        if (b.length === 0) return a.length;
-        const matrix = [];
-        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-        for (let i = 1; i <= b.length; i++) {
-            for (let j = 1; j <= a.length; j++) {
-                if (b.charAt(i-1) === a.charAt(j-1)) {
-                    matrix[i][j] = matrix[i-1][j-1];
-                } else {
-                    matrix[i][j] = Math.min(matrix[i-1][j-1] + 1,
-                                            Math.min(matrix[i][j-1] + 1,
-                                                     matrix[i-1][j] + 1));
-                }
-            }
-        }
-        return matrix[b.length][a.length];
-    }
-
     // ---------- Extract Keywords ----------
     function extractKeywords(text) {
         const words = text.toLowerCase().split(/\s+/);
         return words.filter(w => w.length > 2 && !stopwords.has(w));
     }
 
-    // ---------- IndexedDB ----------
+    // ---------- IndexedDB Setup ----------
     function openDB() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(DB_NAME, DB_VERSION);
+            
             request.onerror = () => reject(request.error);
-            request.onsuccess = () => resolve(request.result);
+            request.onsuccess = () => {
+                db = request.result;
+                console.log('IndexedDB opened successfully');
+                resolve(db);
+            };
+            
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
-                if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                console.log('Creating/upgrading IndexedDB stores...');
+                
+                // Store for learned Q&A pairs
+                if (!db.objectStoreNames.contains(LEARNED_STORE)) {
+                    db.createObjectStore(LEARNED_STORE, { keyPath: 'id', autoIncrement: true });
                 }
+                
+                // Store for file contents (API keys effectively)
+                if (!db.objectStoreNames.contains(FILES_STORE)) {
+                    db.createObjectStore(FILES_STORE, { keyPath: 'fileName' });
+                }
+                
+                // Store for conversation context
                 if (!db.objectStoreNames.contains(CONTEXT_STORE)) {
                     db.createObjectStore(CONTEXT_STORE, { keyPath: 'id' });
                 }
+                
+                // Store for user preferences
                 if (!db.objectStoreNames.contains(PREFS_STORE)) {
                     db.createObjectStore(PREFS_STORE, { keyPath: 'key' });
+                }
+                
+                // Store for API keys
+                if (!db.objectStoreNames.contains(API_KEY_STORE)) {
+                    db.createObjectStore(API_KEY_STORE, { keyPath: 'mode' });
                 }
             };
         });
     }
 
+    // ---------- File Storage in IndexedDB ----------
+    async function saveFileToDB(fileName, content) {
+        if (!db) return;
+        try {
+            const tx = db.transaction(FILES_STORE, 'readwrite');
+            const store = tx.objectStore(FILES_STORE);
+            await store.put({ fileName, content, timestamp: Date.now() });
+            return tx.complete;
+        } catch (e) {
+            console.error('Error saving file to IndexedDB:', e);
+        }
+    }
+
+    async function getFileFromDB(fileName) {
+        if (!db) return null;
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(FILES_STORE, 'readonly');
+            const store = tx.objectStore(FILES_STORE);
+            const request = store.get(fileName);
+            request.onsuccess = () => resolve(request.result?.content || null);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function getAllFilesFromDB() {
+        if (!db) return {};
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(FILES_STORE, 'readonly');
+            const store = tx.objectStore(FILES_STORE);
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const files = {};
+                request.result.forEach(item => {
+                    files[item.fileName] = item.content;
+                });
+                resolve(files);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // ---------- API Key Management in IndexedDB ----------
+    async function saveAPIKey(mode, apiKey) {
+        if (!db) return;
+        try {
+            const tx = db.transaction(API_KEY_STORE, 'readwrite');
+            const store = tx.objectStore(API_KEY_STORE);
+            await store.put({ mode, apiKey, timestamp: Date.now() });
+            return tx.complete;
+        } catch (e) {
+            console.error('Error saving API key to IndexedDB:', e);
+        }
+    }
+
+    async function getAPIKey(mode) {
+        if (!db) return null;
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(API_KEY_STORE, 'readonly');
+            const store = tx.objectStore(API_KEY_STORE);
+            const request = store.get(mode);
+            request.onsuccess = () => resolve(request.result?.apiKey || null);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // ---------- Learned Pairs Storage ----------
     async function saveLearnedPair(question, answer) {
         if (!db) return;
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
+        const tx = db.transaction(LEARNED_STORE, 'readwrite');
+        const store = tx.objectStore(LEARNED_STORE);
         store.add({ question, answer, timestamp: Date.now() });
         return tx.complete;
     }
@@ -208,14 +203,15 @@
     async function loadLearnedPairs() {
         if (!db) return [];
         return new Promise((resolve, reject) => {
-            const tx = db.transaction(STORE_NAME, 'readonly');
-            const store = tx.objectStore(STORE_NAME);
+            const tx = db.transaction(LEARNED_STORE, 'readonly');
+            const store = tx.objectStore(LEARNED_STORE);
             const request = store.getAll();
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
         });
     }
 
+    // ---------- Context Storage ----------
     async function saveContext() {
         if (!db) return;
         const tx = db.transaction(CONTEXT_STORE, 'readwrite');
@@ -226,71 +222,115 @@
 
     async function loadContext() {
         if (!db) return;
-        const tx = db.transaction(CONTEXT_STORE, 'readonly');
-        const store = tx.objectStore(CONTEXT_STORE);
-        const request = store.get('history');
-        request.onsuccess = () => {
-            if (request.result) {
-                conversationHistory = request.result.messages;
-            }
-        };
-        return request;
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(CONTEXT_STORE, 'readonly');
+            const store = tx.objectStore(CONTEXT_STORE);
+            const request = store.get('history');
+            request.onsuccess = () => {
+                if (request.result) {
+                    conversationHistory = request.result.messages || [];
+                }
+                resolve();
+            };
+            request.onerror = () => reject(request.error);
+        });
     }
 
+    // ---------- Preferences Storage ----------
     async function savePrefs() {
         if (!db) return;
         const tx = db.transaction(PREFS_STORE, 'readwrite');
         const store = tx.objectStore(PREFS_STORE);
         store.put({ key: 'userPrefs', value: userPrefs });
-        setCookie('packai_prefs', userPrefs);
         return tx.complete;
     }
 
     async function loadPrefs() {
-        const cookiePrefs = getCookie('packai_prefs');
-        if (cookiePrefs) {
-            userPrefs = cookiePrefs;
-            return;
-        }
         if (!db) return;
-        const tx = db.transaction(PREFS_STORE, 'readonly');
-        const store = tx.objectStore(PREFS_STORE);
-        const request = store.get('userPrefs');
-        request.onsuccess = () => {
-            if (request.result) {
-                userPrefs = request.result.value;
-                setCookie('packai_prefs', userPrefs);
-            }
-        };
-        return request;
-    }
-
-    // ---------- Sentiment ----------
-    function detectSentiment(text) {
-        const words = text.toLowerCase().split(/\s+/);
-        let positive = 0, negative = 0;
-        for (let w of words) {
-            if (positiveWords.has(w)) positive++;
-            if (negativeWords.has(w)) negative++;
-        }
-        if (positive > negative) return 'positive';
-        if (negative > positive) return 'negative';
-        return 'neutral';
-    }
-
-    // ---------- Topics ----------
-    function detectTopics(text) {
-        const lower = text.toLowerCase();
-        const detected = [];
-        for (let [topic, keywords] of Object.entries(topics)) {
-            for (let kw of keywords) {
-                if (lower.includes(kw)) {
-                    detected.push(topic);
-                    break;
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(PREFS_STORE, 'readonly');
+            const store = tx.objectStore(PREFS_STORE);
+            const request = store.get('userPrefs');
+            request.onsuccess = () => {
+                if (request.result) {
+                    userPrefs = request.result.value || {};
                 }
+                resolve();
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // ---------- Fetch and Cache Files ----------
+    async function fetchAndCacheFile(fileName) {
+        try {
+            console.log(`Fetching ${fileName}...`);
+            const response = await fetch(fileName);
+            if (!response.ok) {
+                console.warn(`Failed to load ${fileName}: ${response.status}`);
+                return null;
+            }
+            const content = await response.text();
+            await saveFileToDB(fileName, content);
+            return content;
+        } catch (error) {
+            console.error(`Error fetching ${fileName}:`, error);
+            return null;
+        }
+    }
+
+    async function getOrFetchFile(fileName) {
+        // Try IndexedDB first
+        let content = await getFileFromDB(fileName);
+        
+        // If not in DB, fetch and cache it
+        if (!content) {
+            content = await fetchAndCacheFile(fileName);
+        }
+        
+        return content;
+    }
+
+    // ---------- Generate API Key from Files ----------
+    async function getOrCreateAPIKey(fileList) {
+        const modeKey = fileList.sort().join('|');
+        
+        // Check if we already have an API key for this mode
+        let apiKey = await getAPIKey(modeKey);
+        if (apiKey) {
+            console.log('Using cached API key for mode');
+            return apiKey;
+        }
+        
+        // Generate new API key
+        console.log('Generating new API key...');
+        const fileContents = {};
+        
+        for (const file of fileList) {
+            const content = await getOrFetchFile(file);
+            if (content) {
+                fileContents[file] = content;
             }
         }
-        return detected;
+        
+        const combinedJson = JSON.stringify(fileContents);
+        const base64 = btoa(unescape(encodeURIComponent(combinedJson)));
+        
+        // Save API key to IndexedDB
+        await saveAPIKey(modeKey, base64);
+        
+        return base64;
+    }
+
+    function decodeAPIKey(apiKey) {
+        if (!apiKey) return {};
+        try {
+            const jsonStr = decodeURIComponent(escape(atob(apiKey)));
+            return JSON.parse(jsonStr);
+        } catch (e) {
+            console.error('Failed to decode API key', e);
+            return {};
+        }
     }
 
     // ---------- Parsers ----------
@@ -335,6 +375,56 @@
         return [...base, ...learnedPairs];
     }
 
+    // ---------- Sentiment ----------
+    function detectSentiment(text) {
+        const words = text.toLowerCase().split(/\s+/);
+        let positive = 0, negative = 0;
+        for (let w of words) {
+            if (positiveWords.has(w)) positive++;
+            if (negativeWords.has(w)) negative++;
+        }
+        if (positive > negative) return 'positive';
+        if (negative > positive) return 'negative';
+        return 'neutral';
+    }
+
+    // ---------- Topics ----------
+    function detectTopics(text) {
+        const lower = text.toLowerCase();
+        const detected = [];
+        for (let [topic, keywords] of Object.entries(topics)) {
+            for (let kw of keywords) {
+                if (lower.includes(kw)) {
+                    detected.push(topic);
+                    break;
+                }
+            }
+        }
+        return detected;
+    }
+
+    // ---------- Levenshtein Distance ----------
+    function levenshtein(a, b) {
+        if (a.length === 0) return b.length;
+        if (b.length === 0) return a.length;
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i-1) === a.charAt(j-1)) {
+                    matrix[i][j] = matrix[i-1][j-1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i-1][j-1] + 1,
+                        Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1)
+                    );
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
     // ---------- Advanced Matching ----------
     function findBestMatch(userMessage, knowledge) {
         const normalizedUser = normalize(userMessage);
@@ -368,8 +458,8 @@
                 }
             }
 
-            const profaneWords = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'cunt', 'dick', 'bastard', 'prick', 'twat', 'wanker', 'arse', 'bollocks', 'bloody', 'motherfucker', 'cocksucker', 'shithead', 'dickhead', 'piss', 'pussy', 'fucktard', 'goddamn', 'shitfuck', 'fuckstick', 'dickweed', 'asshat', 'shitlord', 'fuckwad', 'twatwaffle', 'cuntpunt', 'fucknugget', 'bitchtits'];
-            const memeWords = ['meme', 'drake', 'spongebob', 'pooh', 'gigachad', 'keyboard cat', 'disaster girl', 'this is fine', 'distracted boyfriend', 'woman yelling at cat', 'hide the pain harold', 'expanding brain', 'grumpy cat', 'success kid'];
+            const profaneWords = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'cunt', 'dick'];
+            const memeWords = ['meme', 'drake', 'spongebob', 'pooh', 'gigachad'];
             
             for (let word of profaneWords) {
                 if (normalizedUser.includes(word) && item.normalized.includes(word)) score += 20;
@@ -411,10 +501,24 @@
 
     async function getAIResponse(userMessage) {
         if (!knowledgeBase.length) {
-            return "I have no knowledge loaded. Please check that your .txt and .pai files exist.";
+            return "I have no knowledge loaded. Please check that your files exist.";
         }
         const match = findBestMatch(userMessage, knowledgeBase);
         return match ? match.answer : "I don't know how to answer that yet. What would be a good response? (Or type 'skip' to ignore)";
+    }
+
+    // ---------- Age Extraction ----------
+    function extractAgeFromMessage(message) {
+        const match = message.match(/\b(\d{1,3})\s*(?:years? old|yo)\b/i);
+        if (match) {
+            const age = parseInt(match[1], 10);
+            if (age > 0 && age < 150) {
+                userPrefs.age = age;
+                savePrefs();
+                return age;
+            }
+        }
+        return null;
     }
 
     // ---------- Learning & UI ----------
@@ -426,7 +530,7 @@
 
         const age = extractAgeFromMessage(trimmed);
         if (age) {
-            await savePrefs();
+            console.log(`User age set to: ${age}`);
         }
 
         conversationHistory.push({ role: 'user', content: trimmed, timestamp: Date.now() });
@@ -450,7 +554,7 @@
                     normalized: normalize(pendingQuestion),
                     keywords: extractKeywords(pendingQuestion.toLowerCase())
                 });
-                addMessage(`Thank you! I've learned that. Next time you ask "${pendingQuestion}", I'll know what to say.`, 'ai');
+                addMessage(`Thank you! I've learned that.`, 'ai');
                 pendingQuestion = null;
                 return;
             }
@@ -504,56 +608,14 @@
         }
     }
 
-    // Clear messages and reset conversation
     function resetChat() {
         messagesDiv.innerHTML = '';
         conversationHistory = [];
         pendingQuestion = null;
     }
 
-    // ---------- API Key Handling ----------
-    const API_KEY_STORAGE_KEY = 'packai_api_key';
-
-    async function getOrCreateAPIKey(fileList) {
-        // Always regenerate key based on current file list
-        console.log('Generating API key for mode...');
-        try {
-            const fileContents = {};
-
-            for (const file of fileList) {
-                const response = await fetch(file);
-                if (!response.ok) {
-                    console.warn(`Failed to load ${file}, skipping`);
-                    continue;
-                }
-                const text = await response.text();
-                fileContents[file] = text;
-            }
-
-            const combinedJson = JSON.stringify(fileContents);
-            const base64 = btoa(unescape(encodeURIComponent(combinedJson)));
-            localStorage.setItem(API_KEY_STORAGE_KEY, base64);
-            return base64;
-        } catch (error) {
-            console.error('Could not generate API key:', error);
-            return '';
-        }
-    }
-
-    function decodeAPIKey(apiKey) {
-        if (!apiKey) return {};
-        try {
-            const jsonStr = decodeURIComponent(escape(atob(apiKey)));
-            return JSON.parse(jsonStr);
-        } catch (e) {
-            console.error('Failed to decode API key', e);
-            return {};
-        }
-    }
-
-    // ---------- Load Knowledge for a given file list ----------
+    // ---------- Load Knowledge ----------
     async function loadKnowledge(fileList) {
-        // Generate new API key (or reuse if same files? but simpler to regenerate)
         const apiKey = await getOrCreateAPIKey(fileList);
         const fileContents = decodeAPIKey(apiKey);
 
@@ -578,7 +640,6 @@
         knowledgeBase = mergeKnowledge(baseKnowledge, learned);
         console.log(`Total knowledge: ${knowledgeBase.length} entries`);
 
-        // Update greeting
         let greeting = `Switched to ${modeSelector.selectedOptions[0].textContent}. `;
         if (userPrefs.age) {
             greeting += `I remember you're ${userPrefs.age}. `;
@@ -587,7 +648,7 @@
         addMessage(greeting, 'ai');
     }
 
-    // ---------- Mode switching ----------
+    // ---------- Mode Switching ----------
     async function switchMode(mode) {
         const files = MODES[mode];
         if (!files) return;
@@ -603,10 +664,9 @@
             console.log('IndexedDB ready');
             await loadContext();
             await loadPrefs();
-            await restoreFromBackup();
-            startBackup();
         } catch (e) {
-            console.error('IndexedDB failed', e);
+            console.error('IndexedDB failed:', e);
+            addMessage('Error: Could not initialize database. Some features may not work.', 'ai');
         }
 
         // Set up mode selector
