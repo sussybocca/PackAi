@@ -4,7 +4,7 @@
     // ---------- Configuration ----------
     // Presets for different dialogue modes
     const MODES = {
-        default: ['cuss-dialouge.txt', 'dialogue.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'Human.PAI', 'Logic.PAI', 'heroic.pai'],
+        default: ['cuss-dialouge.txt', 'dialogue.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'Human.PAI', 'Logic.PAI', 'code-dialouge.txt', 'heroic.pai'],
         cuss: ['cuss-dialouge.txt'],
         human: ['Human.PAI'],
         logic: ['Logic.PAI'],
