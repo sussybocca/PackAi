@@ -1,4 +1,4 @@
-// PackAi – All storage in IndexedDB (no localStorage)
+// PackAi – Pure In-Memory AI Engine (No Storage)
 
 (function() {
     // ---------- Configuration ----------
@@ -13,31 +13,12 @@
     };
 
     let DIALOGUE_FILES = MODES.default;
-
-    const DB_NAME = 'PackAiDB';
-   const DB_VERSION = 4;
-    
-    // Store names
-    const LEARNED_STORE = 'learnedQA';
-    const FILES_STORE = 'fileContents';
-    const CONTEXT_STORE = 'conversationContext';
-    const PREFS_STORE = 'userPreferences';
-    const API_KEY_STORE = 'apiKeys';
-
     let knowledgeBase = [];
-    let db;
 
     const messagesDiv = document.getElementById('messages');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const modeSelector = document.getElementById('mode-selector');
-
-    // Context memory
-    let conversationHistory = [];
-    const MAX_HISTORY = 10;
-
-    // User preferences
-    let userPrefs = {};
 
     // Sentiment lexicons
     const positiveWords = new Set(['good', 'great', 'awesome', 'excellent', 'happy', 'love', 'wonderful', 'fantastic', 'nice', 'perfect', 'glad', 'pleased', 'joy', 'amazing', 'brilliant']);
@@ -82,187 +63,8 @@
         return words.filter(w => w.length > 2 && !stopwords.has(w));
     }
 
-    // ---------- IndexedDB Setup ----------
-    function openDB() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
-            
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => {
-                db = request.result;
-                console.log('IndexedDB opened successfully');
-                resolve(db);
-            };
-            
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                console.log('Creating/upgrading IndexedDB stores...');
-                
-                // Store for learned Q&A pairs
-                if (!db.objectStoreNames.contains(LEARNED_STORE)) {
-                    db.createObjectStore(LEARNED_STORE, { keyPath: 'id', autoIncrement: true });
-                }
-                
-                // Store for file contents (API keys effectively)
-                if (!db.objectStoreNames.contains(FILES_STORE)) {
-                    db.createObjectStore(FILES_STORE, { keyPath: 'fileName' });
-                }
-                
-                // Store for conversation context
-                if (!db.objectStoreNames.contains(CONTEXT_STORE)) {
-                    db.createObjectStore(CONTEXT_STORE, { keyPath: 'id' });
-                }
-                
-                // Store for user preferences
-                if (!db.objectStoreNames.contains(PREFS_STORE)) {
-                    db.createObjectStore(PREFS_STORE, { keyPath: 'key' });
-                }
-                
-                // Store for API keys
-                if (!db.objectStoreNames.contains(API_KEY_STORE)) {
-                    db.createObjectStore(API_KEY_STORE, { keyPath: 'mode' });
-                }
-            };
-        });
-    }
-
-    // ---------- File Storage in IndexedDB ----------
-    async function saveFileToDB(fileName, content) {
-        if (!db) return;
-        try {
-            const tx = db.transaction(FILES_STORE, 'readwrite');
-            const store = tx.objectStore(FILES_STORE);
-            await store.put({ fileName, content, timestamp: Date.now() });
-            return tx.complete;
-        } catch (e) {
-            console.error('Error saving file to IndexedDB:', e);
-        }
-    }
-
-    async function getFileFromDB(fileName) {
-        if (!db) return null;
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(FILES_STORE, 'readonly');
-            const store = tx.objectStore(FILES_STORE);
-            const request = store.get(fileName);
-            request.onsuccess = () => resolve(request.result?.content || null);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    async function getAllFilesFromDB() {
-        if (!db) return {};
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(FILES_STORE, 'readonly');
-            const store = tx.objectStore(FILES_STORE);
-            const request = store.getAll();
-            request.onsuccess = () => {
-                const files = {};
-                request.result.forEach(item => {
-                    files[item.fileName] = item.content;
-                });
-                resolve(files);
-            };
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    // ---------- API Key Management in IndexedDB ----------
-    async function saveAPIKey(mode, apiKey) {
-        if (!db) return;
-        try {
-            const tx = db.transaction(API_KEY_STORE, 'readwrite');
-            const store = tx.objectStore(API_KEY_STORE);
-            await store.put({ mode, apiKey, timestamp: Date.now() });
-            return tx.complete;
-        } catch (e) {
-            console.error('Error saving API key to IndexedDB:', e);
-        }
-    }
-
-    async function getAPIKey(mode) {
-        if (!db) return null;
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(API_KEY_STORE, 'readonly');
-            const store = tx.objectStore(API_KEY_STORE);
-            const request = store.get(mode);
-            request.onsuccess = () => resolve(request.result?.apiKey || null);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    // ---------- Learned Pairs Storage ----------
-    async function saveLearnedPair(question, answer) {
-        if (!db) return;
-        const tx = db.transaction(LEARNED_STORE, 'readwrite');
-        const store = tx.objectStore(LEARNED_STORE);
-        store.add({ question, answer, timestamp: Date.now() });
-        return tx.complete;
-    }
-
-    async function loadLearnedPairs() {
-        if (!db) return [];
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(LEARNED_STORE, 'readonly');
-            const store = tx.objectStore(LEARNED_STORE);
-            const request = store.getAll();
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    // ---------- Context Storage ----------
-    async function saveContext() {
-        if (!db) return;
-        const tx = db.transaction(CONTEXT_STORE, 'readwrite');
-        const store = tx.objectStore(CONTEXT_STORE);
-        store.put({ id: 'history', messages: conversationHistory });
-        return tx.complete;
-    }
-
-    async function loadContext() {
-        if (!db) return;
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(CONTEXT_STORE, 'readonly');
-            const store = tx.objectStore(CONTEXT_STORE);
-            const request = store.get('history');
-            request.onsuccess = () => {
-                if (request.result) {
-                    conversationHistory = request.result.messages || [];
-                }
-                resolve();
-            };
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    // ---------- Preferences Storage ----------
-    async function savePrefs() {
-        if (!db) return;
-        const tx = db.transaction(PREFS_STORE, 'readwrite');
-        const store = tx.objectStore(PREFS_STORE);
-        store.put({ key: 'userPrefs', value: userPrefs });
-        return tx.complete;
-    }
-
-    async function loadPrefs() {
-        if (!db) return;
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(PREFS_STORE, 'readonly');
-            const store = tx.objectStore(PREFS_STORE);
-            const request = store.get('userPrefs');
-            request.onsuccess = () => {
-                if (request.result) {
-                    userPrefs = request.result.value || {};
-                }
-                resolve();
-            };
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    // ---------- Fetch and Cache Files ----------
-    async function fetchAndCacheFile(fileName) {
+    // ---------- Fetch Files ----------
+    async function fetchFile(fileName) {
         try {
             console.log(`Fetching ${fileName}...`);
             const response = await fetch(fileName);
@@ -270,66 +72,10 @@
                 console.warn(`Failed to load ${fileName}: ${response.status}`);
                 return null;
             }
-            const content = await response.text();
-            await saveFileToDB(fileName, content);
-            return content;
+            return await response.text();
         } catch (error) {
             console.error(`Error fetching ${fileName}:`, error);
             return null;
-        }
-    }
-
-    async function getOrFetchFile(fileName) {
-        // Try IndexedDB first
-        let content = await getFileFromDB(fileName);
-        
-        // If not in DB, fetch and cache it
-        if (!content) {
-            content = await fetchAndCacheFile(fileName);
-        }
-        
-        return content;
-    }
-
-    // ---------- Generate API Key from Files ----------
-    async function getOrCreateAPIKey(fileList) {
-        const modeKey = fileList.sort().join('|');
-        
-        // Check if we already have an API key for this mode
-        let apiKey = await getAPIKey(modeKey);
-        if (apiKey) {
-            console.log('Using cached API key for mode');
-            return apiKey;
-        }
-        
-        // Generate new API key
-        console.log('Generating new API key...');
-        const fileContents = {};
-        
-        for (const file of fileList) {
-            const content = await getOrFetchFile(file);
-            if (content) {
-                fileContents[file] = content;
-            }
-        }
-        
-        const combinedJson = JSON.stringify(fileContents);
-        const base64 = btoa(unescape(encodeURIComponent(combinedJson)));
-        
-        // Save API key to IndexedDB
-        await saveAPIKey(modeKey, base64);
-        
-        return base64;
-    }
-
-    function decodeAPIKey(apiKey) {
-        if (!apiKey) return {};
-        try {
-            const jsonStr = decodeURIComponent(escape(atob(apiKey)));
-            return JSON.parse(jsonStr);
-        } catch (e) {
-            console.error('Failed to decode API key', e);
-            return {};
         }
     }
 
@@ -362,17 +108,6 @@
             }
         }
         return pairs;
-    }
-
-    function mergeKnowledge(base, learned) {
-        const learnedPairs = learned.map(l => ({ 
-            question: l.question, 
-            answer: l.answer, 
-            learned: true,
-            normalized: normalize(l.question),
-            keywords: extractKeywords(l.question.toLowerCase())
-        }));
-        return [...base, ...learnedPairs];
     }
 
     // ---------- Sentiment ----------
@@ -478,18 +213,6 @@
             const commonTopics = userTopics.filter(t => itemTopics.includes(t));
             score += commonTopics.length * 15;
 
-            if (conversationHistory.length > 0) {
-                const lastMsg = conversationHistory[conversationHistory.length-1];
-                if (lastMsg.role === 'user') {
-                    const lastTopics = detectTopics(lastMsg.content);
-                    if (lastTopics.some(t => itemTopics.includes(t))) score += 10;
-                }
-            }
-
-            if (userPrefs.age && item.answer.toLowerCase().includes(userPrefs.age.toString())) {
-                score += 5;
-            }
-
             if (score > bestScore) {
                 bestScore = score;
                 bestMatch = item;
@@ -499,82 +222,16 @@
         return bestScore > 20 ? bestMatch : null;
     }
 
-    async function getAIResponse(userMessage) {
+    function getAIResponse(userMessage) {
         if (!knowledgeBase.length) {
             return "I have no knowledge loaded. Please check that your files exist.";
         }
         const match = findBestMatch(userMessage, knowledgeBase);
-        return match ? match.answer : "I don't know how to answer that yet. What would be a good response? (Or type 'skip' to ignore)";
+        return match ? match.answer : "I don't know how to answer that.";
     }
 
-    // ---------- Age Extraction ----------
-    function extractAgeFromMessage(message) {
-        const match = message.match(/\b(\d{1,3})\s*(?:years? old|yo)\b/i);
-        if (match) {
-            const age = parseInt(match[1], 10);
-            if (age > 0 && age < 150) {
-                userPrefs.age = age;
-                savePrefs();
-                return age;
-            }
-        }
-        return null;
-    }
-
-    // ---------- Learning & UI ----------
-    let pendingQuestion = null;
-
-    async function handleUserMessage(message) {
-        const trimmed = message.trim();
-        if (!trimmed) return;
-
-        const age = extractAgeFromMessage(trimmed);
-        if (age) {
-            console.log(`User age set to: ${age}`);
-        }
-
-        conversationHistory.push({ role: 'user', content: trimmed, timestamp: Date.now() });
-        if (conversationHistory.length > MAX_HISTORY) conversationHistory.shift();
-        await saveContext();
-
-        addMessage(trimmed, 'user');
-        userInput.value = '';
-
-        if (pendingQuestion) {
-            if (trimmed.toLowerCase() === 'skip') {
-                addMessage('Okay, I won\'t learn that this time.', 'ai');
-                pendingQuestion = null;
-                return;
-            } else {
-                await saveLearnedPair(pendingQuestion, trimmed);
-                knowledgeBase.push({ 
-                    question: pendingQuestion, 
-                    answer: trimmed, 
-                    learned: true,
-                    normalized: normalize(pendingQuestion),
-                    keywords: extractKeywords(pendingQuestion.toLowerCase())
-                });
-                addMessage(`Thank you! I've learned that.`, 'ai');
-                pendingQuestion = null;
-                return;
-            }
-        }
-
-        const typingIndicator = addMessage('', 'ai', true);
-        const response = await getAIResponse(trimmed);
-        removeTypingIndicator(typingIndicator);
-
-        if (response === "I don't know how to answer that yet. What would be a good response? (Or type 'skip' to ignore)") {
-            pendingQuestion = trimmed;
-        }
-
-        addMessage(response, 'ai');
-        conversationHistory.push({ role: 'ai', content: response, timestamp: Date.now() });
-        if (conversationHistory.length > MAX_HISTORY) conversationHistory.shift();
-        await saveContext();
-    }
-
-    function addMessage(text, sender, isTyping = false) {
+    // ---------- UI ----------
+    function addMessage(text, sender) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
         if (sender === 'user') {
@@ -591,61 +248,45 @@
 
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(bubble);
-
-        if (isTyping) {
-            messageDiv.classList.add('typing');
-            bubble.textContent = '';
-        }
-
         messagesDiv.appendChild(messageDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
         return messageDiv;
     }
 
-    function removeTypingIndicator(element) {
-        if (element && element.parentNode) {
-            element.remove();
-        }
-    }
+    function handleUserMessage(message) {
+        const trimmed = message.trim();
+        if (!trimmed) return;
 
-    function resetChat() {
-        messagesDiv.innerHTML = '';
-        conversationHistory = [];
-        pendingQuestion = null;
+        addMessage(trimmed, 'user');
+        userInput.value = '';
+
+        const response = getAIResponse(trimmed);
+        addMessage(response, 'ai');
     }
 
     // ---------- Load Knowledge ----------
     async function loadKnowledge(fileList) {
-        const apiKey = await getOrCreateAPIKey(fileList);
-        const fileContents = decodeAPIKey(apiKey);
-
-        let baseKnowledge = [];
-        for (const [filename, content] of Object.entries(fileContents)) {
-            if (filename.toLowerCase().endsWith('.pai')) {
+        knowledgeBase = [];
+        
+        for (const file of fileList) {
+            const content = await fetchFile(file);
+            if (!content) continue;
+            
+            if (file.toLowerCase().endsWith('.pai')) {
                 const pairs = parsePAI(content);
-                console.log(`Loaded ${pairs.length} pairs from ${filename} (PAI)`);
-                baseKnowledge = baseKnowledge.concat(pairs);
+                console.log(`Loaded ${pairs.length} pairs from ${file} (PAI)`);
+                knowledgeBase = knowledgeBase.concat(pairs);
             } else {
                 const pairs = parseTxt(content);
-                console.log(`Loaded ${pairs.length} pairs from ${filename} (TXT)`);
-                baseKnowledge = baseKnowledge.concat(pairs);
+                console.log(`Loaded ${pairs.length} pairs from ${file} (TXT)`);
+                knowledgeBase = knowledgeBase.concat(pairs);
             }
         }
 
-        console.log(`Total base knowledge: ${baseKnowledge.length} pairs`);
-
-        const learned = await loadLearnedPairs();
-        console.log(`Loaded ${learned.length} learned pairs from IndexedDB`);
-
-        knowledgeBase = mergeKnowledge(baseKnowledge, learned);
         console.log(`Total knowledge: ${knowledgeBase.length} entries`);
-
-        let greeting = `Switched to ${modeSelector.selectedOptions[0].textContent}. `;
-        if (userPrefs.age) {
-            greeting += `I remember you're ${userPrefs.age}. `;
-        }
-        greeting += 'How can I help?';
-        addMessage(greeting, 'ai');
+        
+        const modeName = modeSelector.selectedOptions[0].textContent;
+        addMessage(`Switched to ${modeName}. How can I help?`, 'ai');
     }
 
     // ---------- Mode Switching ----------
@@ -653,22 +294,12 @@
         const files = MODES[mode];
         if (!files) return;
         DIALOGUE_FILES = files;
-        resetChat();
+        messagesDiv.innerHTML = '';
         await loadKnowledge(files);
     }
 
     // ---------- Initialization ----------
     async function init() {
-        try {
-            db = await openDB();
-            console.log('IndexedDB ready');
-            await loadContext();
-            await loadPrefs();
-        } catch (e) {
-            console.error('IndexedDB failed:', e);
-            addMessage('Error: Could not initialize database. Some features may not work.', 'ai');
-        }
-
         // Set up mode selector
         modeSelector.addEventListener('change', (e) => {
             switchMode(e.target.value);
@@ -682,6 +313,8 @@
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleUserMessage(userInput.value);
         });
+
+        console.log('PackAi ready - pure in-memory mode');
     }
 
     init().catch(console.error);
