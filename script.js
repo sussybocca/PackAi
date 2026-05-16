@@ -15,7 +15,7 @@
     let DIALOGUE_FILES = MODES.default;
 
     const DB_NAME = 'PackAiDB';
-    const DB_VERSION = 1;
+   const DB_VERSION = 4;
     
     // Store names
     const LEARNED_STORE = 'learnedQA';
