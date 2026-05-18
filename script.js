@@ -1,9 +1,10 @@
-// PackAi – Pure In-Memory AI Engine (No Storage)
+// PackAi – The Most Advanced AI Engine Ever (with dynamic mode switching)
 
 (function() {
     // ---------- Configuration ----------
+    // Presets for different dialogue modes
     const MODES = {
-        default: ['cuss-dialouge.txt', 'dialogue.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'Human.PAI', 'Logic.PAI', 'code-dialouge.txt', 'heroic.pai'],
+        default: ['cuss-dialouge.txt', 'dialogue.txt', 'language.txt', 'nerd-vs-bully-vs-normal.txt', 'roasted-dialouge.txt', 'sarcasm.txt', 'Human.PAI', 'Logic.PAI', 'heroic.pai'],
         cuss: ['cuss-dialouge.txt'],
         human: ['Human.PAI'],
         logic: ['Logic.PAI'],
@@ -12,13 +13,28 @@
         language: ['language.txt']
     };
 
-    let DIALOGUE_FILES = MODES.default;
+    let DIALOGUE_FILES = MODES.default; // current file list
+
+    const DB_NAME = 'PackAiDB';
+    const DB_VERSION = 3;
+    const STORE_NAME = 'learnedQA';
+    const CONTEXT_STORE = 'conversationContext';
+    const PREFS_STORE = 'userPreferences';
+
     let knowledgeBase = [];
+    let db;
 
     const messagesDiv = document.getElementById('messages');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const modeSelector = document.getElementById('mode-selector');
+
+    // Context memory
+    let conversationHistory = [];
+    const MAX_HISTORY = 10;
+
+    // User preferences (age, etc.)
+    let userPrefs = {};
 
     // Sentiment lexicons
     const positiveWords = new Set(['good', 'great', 'awesome', 'excellent', 'happy', 'love', 'wonderful', 'fantastic', 'nice', 'perfect', 'glad', 'pleased', 'joy', 'amazing', 'brilliant']);
@@ -33,7 +49,7 @@
         life: ['life', 'love', 'meaning', 'purpose', 'death', 'happiness', 'sad', 'relationship', 'family', 'friend']
     };
 
-    // Stopwords
+    // Full stopwords list
     const stopwords = new Set([
         'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
         'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
@@ -49,6 +65,82 @@
         'should', 'now'
     ]);
 
+    // ---------- Cookie Utilities ----------
+    function setCookie(name, value, days = 365) {
+        const secure = location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(JSON.stringify(value))}; path=/; max-age=${days * 86400}; SameSite=Strict${secure}`;
+    }
+
+    function getCookie(name) {
+        const cookies = document.cookie.split('; ').reduce((acc, cookie) => {
+            const [key, val] = cookie.split('=');
+            acc[decodeURIComponent(key)] = decodeURIComponent(val);
+            return acc;
+        }, {});
+        if (cookies[name]) {
+            try {
+                return JSON.parse(cookies[name]);
+            } catch {
+                return cookies[name];
+            }
+        }
+        return null;
+    }
+
+    // ---------- Backup ----------
+    let backupInterval = null;
+    async function startBackup() {
+        backupInterval = setInterval(async () => {
+            if (!db) return;
+            try {
+                const learned = await loadLearnedPairs();
+                const backup = {
+                    timestamp: Date.now(),
+                    learned,
+                    context: conversationHistory,
+                    prefs: userPrefs,
+                    localStorage: { ...localStorage }
+                };
+                localStorage.setItem('packai_backup', JSON.stringify(backup));
+                console.log('Backup saved to localStorage.');
+            } catch (e) {
+                console.error('Backup failed:', e);
+            }
+        }, 60000);
+    }
+
+    function stopBackup() {
+        if (backupInterval) clearInterval(backupInterval);
+    }
+
+    async function restoreFromBackup() {
+        const backupStr = localStorage.getItem('packai_backup');
+        if (backupStr) {
+            try {
+                const backup = JSON.parse(backupStr);
+                console.log('Found backup from', new Date(backup.timestamp).toLocaleString());
+                if (backup.prefs) userPrefs = backup.prefs;
+                if (backup.context) conversationHistory = backup.context.slice(0, MAX_HISTORY);
+            } catch (e) {
+                console.error('Backup restore failed:', e);
+            }
+        }
+    }
+
+    // ---------- Age Memory ----------
+    function extractAgeFromMessage(message) {
+        const match = message.match(/\b(\d{1,3})\s*(?:years? old|yo)\b/i);
+        if (match) {
+            const age = parseInt(match[1], 10);
+            if (age > 0 && age < 150) {
+                userPrefs.age = age;
+                setCookie('packai_prefs', userPrefs);
+                return age;
+            }
+        }
+        return null;
+    }
+
     // ---------- Text Normalization ----------
     function normalize(text) {
         return text.toLowerCase()
@@ -57,88 +149,120 @@
             .trim();
     }
 
+    // ---------- Levenshtein ----------
+    function levenshtein(a, b) {
+        if (a.length === 0) return b.length;
+        if (b.length === 0) return a.length;
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i-1) === a.charAt(j-1)) {
+                    matrix[i][j] = matrix[i-1][j-1];
+                } else {
+                    matrix[i][j] = Math.min(matrix[i-1][j-1] + 1,
+                                            Math.min(matrix[i][j-1] + 1,
+                                                     matrix[i-1][j] + 1));
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
     // ---------- Extract Keywords ----------
     function extractKeywords(text) {
         const words = text.toLowerCase().split(/\s+/);
         return words.filter(w => w.length > 2 && !stopwords.has(w));
     }
 
-    // ---------- Fetch Files ----------
-    async function fetchFile(fileName) {
-        try {
-            console.log(`Fetching ${fileName}...`);
-            const response = await fetch(fileName);
-            if (!response.ok) {
-                console.warn(`Failed to load ${fileName}: ${response.status}`);
-                return null;
-            }
-            return await response.text();
-        } catch (error) {
-            console.error(`Error fetching ${fileName}:`, error);
-            return null;
-        }
+    // ---------- IndexedDB ----------
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                }
+                if (!db.objectStoreNames.contains(CONTEXT_STORE)) {
+                    db.createObjectStore(CONTEXT_STORE, { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains(PREFS_STORE)) {
+                    db.createObjectStore(PREFS_STORE, { keyPath: 'key' });
+                }
+            };
+        });
     }
 
-  function parseTxt(content) {
-    const lines = content.split('\n');
-    const pairs = [];
-    
-    for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
-        
-        let question, answer;
-        
-        // Try different separators in order
-        if (line.includes('::')) {
-            const parts = line.split('::');
-            question = parts[0].trim();
-            answer = parts.slice(1).join('::').trim();
-        } else if (line.includes('|')) {
-            const parts = line.split('|');
-            question = parts[0].trim();
-            answer = parts.slice(1).join('|').trim();
-        } else if (line.includes('\t')) {
-            const parts = line.split('\t');
-            question = parts[0].trim();
-            answer = parts.slice(1).join('\t').trim();
-        } else if (line.includes(':')) {
-            const parts = line.split(':');
-            question = parts[0].trim();
-            answer = parts.slice(1).join(':').trim();
-        } else {
-            // No separator found, just accept the whole line
-            question = line;
-            answer = line;
-        }
-        
-        if (question && answer) {
-            const normalized = normalize(question);
-            const keywords = extractKeywords(normalized);
-            pairs.push({ question, answer, normalized, keywords });
-        }
+    async function saveLearnedPair(question, answer) {
+        if (!db) return;
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.add({ question, answer, timestamp: Date.now() });
+        return tx.complete;
     }
-    
-    return pairs;
-}
 
-    function parsePAI(content) {
-        const lines = content.split('\n');
-        const pairs = [];
-        const regex = /^User\)Response \$([^$]+)\$ @PAI\) response @(.*)$/;
-        for (let line of lines) {
-            line = line.trim();
-            if (!line) continue;
-            const match = line.match(regex);
-            if (match) {
-                const question = match[1].trim();
-                const answer = match[2].trim();
-                const normalized = normalize(question);
-                const keywords = extractKeywords(normalized);
-                pairs.push({ question, answer, normalized, keywords });
+    async function loadLearnedPairs() {
+        if (!db) return [];
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function saveContext() {
+        if (!db) return;
+        const tx = db.transaction(CONTEXT_STORE, 'readwrite');
+        const store = tx.objectStore(CONTEXT_STORE);
+        store.put({ id: 'history', messages: conversationHistory });
+        return tx.complete;
+    }
+
+    async function loadContext() {
+        if (!db) return;
+        const tx = db.transaction(CONTEXT_STORE, 'readonly');
+        const store = tx.objectStore(CONTEXT_STORE);
+        const request = store.get('history');
+        request.onsuccess = () => {
+            if (request.result) {
+                conversationHistory = request.result.messages;
             }
+        };
+        return request;
+    }
+
+    async function savePrefs() {
+        if (!db) return;
+        const tx = db.transaction(PREFS_STORE, 'readwrite');
+        const store = tx.objectStore(PREFS_STORE);
+        store.put({ key: 'userPrefs', value: userPrefs });
+        setCookie('packai_prefs', userPrefs);
+        return tx.complete;
+    }
+
+    async function loadPrefs() {
+        const cookiePrefs = getCookie('packai_prefs');
+        if (cookiePrefs) {
+            userPrefs = cookiePrefs;
+            return;
         }
-        return pairs;
+        if (!db) return;
+        const tx = db.transaction(PREFS_STORE, 'readonly');
+        const store = tx.objectStore(PREFS_STORE);
+        const request = store.get('userPrefs');
+        request.onsuccess = () => {
+            if (request.result) {
+                userPrefs = request.result.value;
+                setCookie('packai_prefs', userPrefs);
+            }
+        };
+        return request;
     }
 
     // ---------- Sentiment ----------
@@ -169,26 +293,46 @@
         return detected;
     }
 
-    // ---------- Levenshtein Distance ----------
-    function levenshtein(a, b) {
-        if (a.length === 0) return b.length;
-        if (b.length === 0) return a.length;
-        const matrix = [];
-        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-        for (let i = 1; i <= b.length; i++) {
-            for (let j = 1; j <= a.length; j++) {
-                if (b.charAt(i-1) === a.charAt(j-1)) {
-                    matrix[i][j] = matrix[i-1][j-1];
-                } else {
-                    matrix[i][j] = Math.min(
-                        matrix[i-1][j-1] + 1,
-                        Math.min(matrix[i][j-1] + 1, matrix[i-1][j] + 1)
-                    );
-                }
+    // ---------- Parsers ----------
+    function parseTxt(content) {
+        return content.split('\n')
+            .filter(line => line.includes('::'))
+            .map(line => {
+                const [q, a] = line.split('::').map(s => s.trim());
+                const normalized = normalize(q);
+                const keywords = extractKeywords(normalized);
+                return { question: q, answer: a, normalized, keywords };
+            });
+    }
+
+    function parsePAI(content) {
+        const lines = content.split('\n');
+        const pairs = [];
+        const regex = /^User\)Response \$([^$]+)\$ @PAI\) response @(.*)$/;
+        for (let line of lines) {
+            line = line.trim();
+            if (!line) continue;
+            const match = line.match(regex);
+            if (match) {
+                const question = match[1].trim();
+                const answer = match[2].trim();
+                const normalized = normalize(question);
+                const keywords = extractKeywords(normalized);
+                pairs.push({ question, answer, normalized, keywords });
             }
         }
-        return matrix[b.length][a.length];
+        return pairs;
+    }
+
+    function mergeKnowledge(base, learned) {
+        const learnedPairs = learned.map(l => ({ 
+            question: l.question, 
+            answer: l.answer, 
+            learned: true,
+            normalized: normalize(l.question),
+            keywords: extractKeywords(l.question.toLowerCase())
+        }));
+        return [...base, ...learnedPairs];
     }
 
     // ---------- Advanced Matching ----------
@@ -224,8 +368,8 @@
                 }
             }
 
-            const profaneWords = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'cunt', 'dick'];
-            const memeWords = ['meme', 'drake', 'spongebob', 'pooh', 'gigachad'];
+            const profaneWords = ['fuck', 'shit', 'damn', 'bitch', 'ass', 'cunt', 'dick', 'bastard', 'prick', 'twat', 'wanker', 'arse', 'bollocks', 'bloody', 'motherfucker', 'cocksucker', 'shithead', 'dickhead', 'piss', 'pussy', 'fucktard', 'goddamn', 'shitfuck', 'fuckstick', 'dickweed', 'asshat', 'shitlord', 'fuckwad', 'twatwaffle', 'cuntpunt', 'fucknugget', 'bitchtits'];
+            const memeWords = ['meme', 'drake', 'spongebob', 'pooh', 'gigachad', 'keyboard cat', 'disaster girl', 'this is fine', 'distracted boyfriend', 'woman yelling at cat', 'hide the pain harold', 'expanding brain', 'grumpy cat', 'success kid'];
             
             for (let word of profaneWords) {
                 if (normalizedUser.includes(word) && item.normalized.includes(word)) score += 20;
@@ -244,6 +388,18 @@
             const commonTopics = userTopics.filter(t => itemTopics.includes(t));
             score += commonTopics.length * 15;
 
+            if (conversationHistory.length > 0) {
+                const lastMsg = conversationHistory[conversationHistory.length-1];
+                if (lastMsg.role === 'user') {
+                    const lastTopics = detectTopics(lastMsg.content);
+                    if (lastTopics.some(t => itemTopics.includes(t))) score += 10;
+                }
+            }
+
+            if (userPrefs.age && item.answer.toLowerCase().includes(userPrefs.age.toString())) {
+                score += 5;
+            }
+
             if (score > bestScore) {
                 bestScore = score;
                 bestMatch = item;
@@ -253,16 +409,68 @@
         return bestScore > 20 ? bestMatch : null;
     }
 
-    function getAIResponse(userMessage) {
+    async function getAIResponse(userMessage) {
         if (!knowledgeBase.length) {
-            return "I have no knowledge loaded. Please check that your files exist.";
+            return "I have no knowledge loaded. Please check that your .txt and .pai files exist.";
         }
         const match = findBestMatch(userMessage, knowledgeBase);
-        return match ? match.answer : "I don't know how to answer that.";
+        return match ? match.answer : "I don't know how to answer that yet. What would be a good response? (Or type 'skip' to ignore)";
     }
 
-    // ---------- UI ----------
-    function addMessage(text, sender) {
+    // ---------- Learning & UI ----------
+    let pendingQuestion = null;
+
+    async function handleUserMessage(message) {
+        const trimmed = message.trim();
+        if (!trimmed) return;
+
+        const age = extractAgeFromMessage(trimmed);
+        if (age) {
+            await savePrefs();
+        }
+
+        conversationHistory.push({ role: 'user', content: trimmed, timestamp: Date.now() });
+        if (conversationHistory.length > MAX_HISTORY) conversationHistory.shift();
+        await saveContext();
+
+        addMessage(trimmed, 'user');
+        userInput.value = '';
+
+        if (pendingQuestion) {
+            if (trimmed.toLowerCase() === 'skip') {
+                addMessage('Okay, I won\'t learn that this time.', 'ai');
+                pendingQuestion = null;
+                return;
+            } else {
+                await saveLearnedPair(pendingQuestion, trimmed);
+                knowledgeBase.push({ 
+                    question: pendingQuestion, 
+                    answer: trimmed, 
+                    learned: true,
+                    normalized: normalize(pendingQuestion),
+                    keywords: extractKeywords(pendingQuestion.toLowerCase())
+                });
+                addMessage(`Thank you! I've learned that. Next time you ask "${pendingQuestion}", I'll know what to say.`, 'ai');
+                pendingQuestion = null;
+                return;
+            }
+        }
+
+        const typingIndicator = addMessage('', 'ai', true);
+        const response = await getAIResponse(trimmed);
+        removeTypingIndicator(typingIndicator);
+
+        if (response === "I don't know how to answer that yet. What would be a good response? (Or type 'skip' to ignore)") {
+            pendingQuestion = trimmed;
+        }
+
+        addMessage(response, 'ai');
+        conversationHistory.push({ role: 'ai', content: response, timestamp: Date.now() });
+        if (conversationHistory.length > MAX_HISTORY) conversationHistory.shift();
+        await saveContext();
+    }
+
+    function addMessage(text, sender, isTyping = false) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
         if (sender === 'user') {
@@ -279,58 +487,128 @@
 
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(bubble);
+
+        if (isTyping) {
+            messageDiv.classList.add('typing');
+            bubble.textContent = '';
+        }
+
         messagesDiv.appendChild(messageDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
         return messageDiv;
     }
 
-    function handleUserMessage(message) {
-        const trimmed = message.trim();
-        if (!trimmed) return;
-
-        addMessage(trimmed, 'user');
-        userInput.value = '';
-
-        const response = getAIResponse(trimmed);
-        addMessage(response, 'ai');
+    function removeTypingIndicator(element) {
+        if (element && element.parentNode) {
+            element.remove();
+        }
     }
 
-    // ---------- Load Knowledge ----------
+    // Clear messages and reset conversation
+    function resetChat() {
+        messagesDiv.innerHTML = '';
+        conversationHistory = [];
+        pendingQuestion = null;
+    }
+
+    // ---------- API Key Handling ----------
+    const API_KEY_STORAGE_KEY = 'packai_api_key';
+
+    async function getOrCreateAPIKey(fileList) {
+        // Always regenerate key based on current file list
+        console.log('Generating API key for mode...');
+        try {
+            const fileContents = {};
+
+            for (const file of fileList) {
+                const response = await fetch(file);
+                if (!response.ok) {
+                    console.warn(`Failed to load ${file}, skipping`);
+                    continue;
+                }
+                const text = await response.text();
+                fileContents[file] = text;
+            }
+
+            const combinedJson = JSON.stringify(fileContents);
+            const base64 = btoa(unescape(encodeURIComponent(combinedJson)));
+            localStorage.setItem(API_KEY_STORAGE_KEY, base64);
+            return base64;
+        } catch (error) {
+            console.error('Could not generate API key:', error);
+            return '';
+        }
+    }
+
+    function decodeAPIKey(apiKey) {
+        if (!apiKey) return {};
+        try {
+            const jsonStr = decodeURIComponent(escape(atob(apiKey)));
+            return JSON.parse(jsonStr);
+        } catch (e) {
+            console.error('Failed to decode API key', e);
+            return {};
+        }
+    }
+
+    // ---------- Load Knowledge for a given file list ----------
     async function loadKnowledge(fileList) {
-        knowledgeBase = [];
-        
-        for (const file of fileList) {
-            const content = await fetchFile(file);
-            if (!content) continue;
-            
-            if (file.toLowerCase().endsWith('.pai')) {
+        // Generate new API key (or reuse if same files? but simpler to regenerate)
+        const apiKey = await getOrCreateAPIKey(fileList);
+        const fileContents = decodeAPIKey(apiKey);
+
+        let baseKnowledge = [];
+        for (const [filename, content] of Object.entries(fileContents)) {
+            if (filename.toLowerCase().endsWith('.pai')) {
                 const pairs = parsePAI(content);
-                console.log(`Loaded ${pairs.length} pairs from ${file} (PAI)`);
-                knowledgeBase = knowledgeBase.concat(pairs);
+                console.log(`Loaded ${pairs.length} pairs from ${filename} (PAI)`);
+                baseKnowledge = baseKnowledge.concat(pairs);
             } else {
                 const pairs = parseTxt(content);
-                console.log(`Loaded ${pairs.length} pairs from ${file} (TXT)`);
-                knowledgeBase = knowledgeBase.concat(pairs);
+                console.log(`Loaded ${pairs.length} pairs from ${filename} (TXT)`);
+                baseKnowledge = baseKnowledge.concat(pairs);
             }
         }
 
+        console.log(`Total base knowledge: ${baseKnowledge.length} pairs`);
+
+        const learned = await loadLearnedPairs();
+        console.log(`Loaded ${learned.length} learned pairs from IndexedDB`);
+
+        knowledgeBase = mergeKnowledge(baseKnowledge, learned);
         console.log(`Total knowledge: ${knowledgeBase.length} entries`);
-        
-        const modeName = modeSelector.selectedOptions[0].textContent;
-        addMessage(`Switched to ${modeName}. How can I help?`, 'ai');
+
+        // Update greeting
+        let greeting = `Switched to ${modeSelector.selectedOptions[0].textContent}. `;
+        if (userPrefs.age) {
+            greeting += `I remember you're ${userPrefs.age}. `;
+        }
+        greeting += 'How can I help?';
+        addMessage(greeting, 'ai');
     }
 
-    // ---------- Mode Switching ----------
+    // ---------- Mode switching ----------
     async function switchMode(mode) {
         const files = MODES[mode];
         if (!files) return;
         DIALOGUE_FILES = files;
-        messagesDiv.innerHTML = '';
+        resetChat();
         await loadKnowledge(files);
     }
 
     // ---------- Initialization ----------
     async function init() {
+        try {
+            db = await openDB();
+            console.log('IndexedDB ready');
+            await loadContext();
+            await loadPrefs();
+            await restoreFromBackup();
+            startBackup();
+        } catch (e) {
+            console.error('IndexedDB failed', e);
+        }
+
         // Set up mode selector
         modeSelector.addEventListener('change', (e) => {
             switchMode(e.target.value);
@@ -344,8 +622,6 @@
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleUserMessage(userInput.value);
         });
-
-        console.log('PackAi ready - pure in-memory mode');
     }
 
     init().catch(console.error);
